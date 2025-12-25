@@ -177,7 +177,7 @@ export default function Home() {
             className="text-5xl md:text-6xl lg:text-7xl font-semibold text-[#3D3D3D] mb-4 leading-tight"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            {floorPlan.venue.name}
+            Razzi & Azra Wedding
           </h1>
 
           <OrnamentalDivider />
@@ -279,6 +279,7 @@ export default function Home() {
               fixtures={floorPlan.fixtures}
               highlightedTableId={selectedResult?.table?.id}
               onTableClick={handleTableClick}
+              showOccupiedSeats={true}
               className="rounded-xl overflow-hidden"
             />
           </div>
@@ -308,12 +309,12 @@ export default function Home() {
                 <span className="text-sm text-[#6B6B6B]">Your Table</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-6 rounded bg-[#f5f5f5] border border-[#E8D5A3]" />
-                <span className="text-sm text-[#6B6B6B]">Pelamin</span>
+                <div className="w-4 h-4 rounded-full bg-[#C9A227] border border-[#B8922A]" />
+                <span className="text-sm text-[#6B6B6B]">Occupied Seat</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-6 rounded bg-[#9CAF88] border border-[#7A9568]" />
-                <span className="text-sm text-[#6B6B6B]">Walkway</span>
+                <div className="w-4 h-4 rounded-full bg-[#F5E1DA] border border-[#E8D5A3]" />
+                <span className="text-sm text-[#6B6B6B]">Available Seat</span>
               </div>
             </div>
           </div>

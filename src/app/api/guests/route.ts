@@ -55,10 +55,40 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, phone, email, notes, tableId, seatNumber } = body;
+    const { name, phone, email, notes, tableId, seatNumber, pax = 1 } = body;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    const guestPax = Math.max(1, parseInt(pax) || 1);
+
+    // Validate seat availability if assigning to a table
+    if (tableId) {
+      const table = await prisma.table.findUnique({
+        where: { id: tableId },
+        include: {
+          guests: {
+            select: { pax: true },
+          },
+        },
+      });
+
+      if (!table) {
+        return NextResponse.json({ error: "Table not found" }, { status: 404 });
+      }
+
+      const currentOccupancy = table.guests.reduce((sum, g) => sum + g.pax, 0);
+      const availableSeats = table.seats - currentOccupancy;
+
+      if (guestPax > availableSeats) {
+        return NextResponse.json(
+          {
+            error: `Not enough seats. Table "${table.name}" has ${availableSeats} seat(s) available, but guest requires ${guestPax} seat(s).`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const guest = await prisma.guest.create({
@@ -67,6 +97,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         email: email || null,
         notes: notes || null,
+        pax: guestPax,
         tableId: tableId || null,
         seatNumber: seatNumber || null,
       },

@@ -7,6 +7,7 @@ interface BatchGuestInput {
   phone?: string;
   email?: string;
   notes?: string;
+  pax?: string | number;
   tableName?: string;
 }
 
@@ -34,15 +35,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch all tables for name matching
+    // Fetch all tables for name matching with current occupancy
     const tables = await prisma.table.findMany({
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+        seats: true,
+        guests: {
+          select: { pax: true },
+        },
+      },
     });
 
-    // Create a map for case-insensitive table name lookup
-    const tableMap = new Map<string, string>();
+    // Create a map for case-insensitive table name lookup with availability tracking
+    const tableMap = new Map<
+      string,
+      { id: string; seats: number; currentPax: number }
+    >();
     for (const table of tables) {
-      tableMap.set(table.name.toLowerCase().trim(), table.id);
+      const currentPax = table.guests.reduce((sum, g) => sum + g.pax, 0);
+      tableMap.set(table.name.toLowerCase().trim(), {
+        id: table.id,
+        seats: table.seats,
+        currentPax,
+      });
     }
 
     const errors: BatchError[] = [];
@@ -51,6 +67,7 @@ export async function POST(request: NextRequest) {
       phone: string | null;
       email: string | null;
       notes: string | null;
+      pax: number;
       tableId: string | null;
     }[] = [];
 
@@ -69,19 +86,36 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      // Parse pax (default to 1)
+      const guestPax = Math.max(1, parseInt(String(guest.pax)) || 1);
+
       // Resolve table name to ID
       let tableId: string | null = null;
       if (guest.tableName && guest.tableName.trim()) {
         const normalizedTableName = guest.tableName.toLowerCase().trim();
-        tableId = tableMap.get(normalizedTableName) || null;
+        const tableInfo = tableMap.get(normalizedTableName);
 
-        if (!tableId) {
+        if (!tableInfo) {
           // Log warning but still create guest without table
           errors.push({
             row: rowNum,
             name: guest.name.trim(),
             error: `Table "${guest.tableName}" not found - guest created without table assignment`,
           });
+        } else {
+          // Check seat availability
+          const availableSeats = tableInfo.seats - tableInfo.currentPax;
+          if (guestPax > availableSeats) {
+            errors.push({
+              row: rowNum,
+              name: guest.name.trim(),
+              error: `Not enough seats at "${guest.tableName}" (${availableSeats} available, ${guestPax} needed) - guest created without table assignment`,
+            });
+          } else {
+            tableId = tableInfo.id;
+            // Update tracking for subsequent guests in this batch
+            tableInfo.currentPax += guestPax;
+          }
         }
       }
 
@@ -90,6 +124,7 @@ export async function POST(request: NextRequest) {
         phone: guest.phone?.trim() || null,
         email: guest.email?.trim() || null,
         notes: guest.notes?.trim() || null,
+        pax: guestPax,
         tableId,
       });
     }

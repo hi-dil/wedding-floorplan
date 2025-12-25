@@ -12,7 +12,9 @@ export async function GET(
     const table = await prisma.table.findUnique({
       where: { id },
       include: {
-        guests: true,
+        guests: {
+          orderBy: { name: "asc" },
+        },
         _count: {
           select: { guests: true },
         },

@@ -2,6 +2,29 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, verifySession } from "@/lib/auth";
 
+// Natural sort function for table names (e.g., "Table 2" before "Table 10")
+function naturalSort(a: string, b: string): number {
+  const regex = /(\d+)|(\D+)/g;
+  const aParts = a.match(regex) || [];
+  const bParts = b.match(regex) || [];
+
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const aPart = aParts[i] || "";
+    const bPart = bParts[i] || "";
+
+    const aNum = parseInt(aPart, 10);
+    const bNum = parseInt(bPart, 10);
+
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      if (aNum !== bNum) return aNum - bNum;
+    } else {
+      const cmp = aPart.localeCompare(bPart);
+      if (cmp !== 0) return cmp;
+    }
+  }
+  return 0;
+}
+
 export async function GET() {
   try {
     const tables = await prisma.table.findMany({
@@ -9,11 +32,27 @@ export async function GET() {
         _count: {
           select: { guests: true },
         },
+        guests: {
+          select: { pax: true },
+        },
       },
-      orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(tables);
+    // Calculate total pax for each table
+    const tablesWithPax = tables.map((table) => {
+      const totalPax = table.guests.reduce((sum, g) => sum + g.pax, 0);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { guests, ...tableWithoutGuests } = table;
+      return {
+        ...tableWithoutGuests,
+        _sum: { pax: totalPax },
+      };
+    });
+
+    // Sort tables by name using natural sort
+    tablesWithPax.sort((a, b) => naturalSort(a.name, b.name));
+
+    return NextResponse.json(tablesWithPax);
   } catch (error) {
     console.error("Get tables error:", error);
     return NextResponse.json({ error: "Failed to fetch tables" }, { status: 500 });

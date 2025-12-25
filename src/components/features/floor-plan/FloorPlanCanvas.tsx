@@ -11,6 +11,8 @@ interface FloorPlanCanvasProps {
   fixtures: Fixture[];
   highlightedTableId?: string | null;
   onTableClick?: (table: Table) => void;
+  showOccupiedSeats?: boolean;
+  showFullTableHighlight?: boolean;
   className?: string;
 }
 
@@ -26,6 +28,8 @@ export function FloorPlanCanvas({
   fixtures,
   highlightedTableId,
   onTableClick,
+  showOccupiedSeats = false,
+  showFullTableHighlight = false,
   className,
 }: FloorPlanCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -505,8 +509,24 @@ export function FloorPlanCanvas({
             const centerY = table.y + table.height / 2;
             const radius = Math.min(table.width, table.height) / 2;
 
+            // Occupancy data
+            const occupiedSeats = table._sum?.pax || 0;
+            const isFull = occupiedSeats >= table.seats;
+
             // Minimum touch target size (44px in SVG units, scaled by venue size)
             const minTouchRadius = Math.max(radius, 22);
+
+            // Table colors based on occupancy (only when showFullTableHighlight is true)
+            const getTableFill = () => {
+              if (isHighlighted || isActive) return TABLE_COLORS.highlighted;
+              if (showFullTableHighlight && isFull) return "#E8B4B4"; // Soft red for full tables
+              return TABLE_COLORS.default;
+            };
+            const getTableStroke = () => {
+              if (isHighlighted || isActive) return TABLE_COLORS.highlightedStroke;
+              if (showFullTableHighlight && isFull) return "#D4A0A0"; // Darker red stroke for full tables
+              return TABLE_COLORS.defaultStroke;
+            };
 
             return (
               <g
@@ -535,8 +555,8 @@ export function FloorPlanCanvas({
                     cx={centerX}
                     cy={centerY}
                     r={radius}
-                    fill={isHighlighted || isActive ? TABLE_COLORS.highlighted : TABLE_COLORS.default}
-                    stroke={isHighlighted || isActive ? TABLE_COLORS.highlightedStroke : TABLE_COLORS.defaultStroke}
+                    fill={getTableFill()}
+                    stroke={getTableStroke()}
                     strokeWidth={isHighlighted || isActive ? 3 : 2}
                     className="transition-colors duration-200"
                   />
@@ -546,8 +566,8 @@ export function FloorPlanCanvas({
                     y={table.y}
                     width={table.width}
                     height={table.height}
-                    fill={isHighlighted || isActive ? TABLE_COLORS.highlighted : TABLE_COLORS.default}
-                    stroke={isHighlighted || isActive ? TABLE_COLORS.highlightedStroke : TABLE_COLORS.defaultStroke}
+                    fill={getTableFill()}
+                    stroke={getTableStroke()}
                     strokeWidth={isHighlighted || isActive ? 3 : 2}
                     rx="4"
                     transform={`rotate(${table.rotation}, ${centerX}, ${centerY})`}
@@ -555,21 +575,22 @@ export function FloorPlanCanvas({
                   />
                 )}
 
-                {/* Seats around the table - Blush pink */}
+                {/* Seats around the table - Gold for occupied, Light pink for available */}
                 {table.shape === "ROUND" &&
                   Array.from({ length: table.seats }).map((_, i) => {
                     const angle = (i * 360) / table.seats - 90;
                     const seatRadius = radius + 12;
                     const seatX = centerX + seatRadius * Math.cos((angle * Math.PI) / 180);
                     const seatY = centerY + seatRadius * Math.sin((angle * Math.PI) / 180);
+                    const isOccupied = showOccupiedSeats && i < occupiedSeats;
                     return (
                       <circle
                         key={i}
                         cx={seatX}
                         cy={seatY}
                         r="6"
-                        fill="#F5E1DA"
-                        stroke="#E8D5A3"
+                        fill={isOccupied ? "#C9A227" : "#F5E1DA"}
+                        stroke={isOccupied ? "#B8922A" : "#E8D5A3"}
                         strokeWidth="1"
                       />
                     );

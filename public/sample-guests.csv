@@ -1,9 +1,9 @@
-name,phone,email,notes,table
-Ahmad bin Hassan,0123456789,ahmad@email.com,VIP Guest,Table 1
-Siti Aminah,0198765432,siti@email.com,,Table 1
-Muhammad Farid,0112233445,,Vegetarian,Table 2
-Nurul Aisyah,0176543210,nurul@email.com,Plus one,Table 2
-Mohd Rizal,,,Family member,Table 3
-Fatimah Zahra,0134567890,fatimah@email.com,,
-Ismail bin Yusof,0145678901,,,Table 4
-Zainab Omar,0156789012,zainab@email.com,Wheelchair access,Table 4
+name,phone,email,pax,notes,table
+Ahmad bin Hassan,0123456789,ahmad@email.com,1,VIP Guest,Table 1
+Siti Aminah,0198765432,siti@email.com,2,,Table 1
+Muhammad Farid,0112233445,,1,Vegetarian,Table 2
+Nurul Aisyah,0176543210,nurul@email.com,3,With family,Table 2
+Mohd Rizal,,,5,Family of 5,Table 3
+Fatimah Zahra,0134567890,fatimah@email.com,1,,
+Ismail bin Yusof,0145678901,,2,,Table 4
+Zainab Omar,0156789012,zainab@email.com,1,Wheelchair access,Table 4

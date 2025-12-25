@@ -4,15 +4,28 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+interface TableWithOccupancy {
+  id: string;
+  name: string;
+  seats: number;
+  _count?: { guests: number };
+  _sum?: { pax: number | null };
+}
+
 interface Stats {
   totalTables: number;
   totalGuests: number;
+  totalPax: number;
   assignedGuests: number;
   unassignedGuests: number;
+  totalSeats: number;
+  occupiedSeats: number;
+  fullTables: number;
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [tables, setTables] = useState<TableWithOccupancy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -34,17 +47,30 @@ export default function AdminDashboard() {
           fetch("/api/guests"),
         ]);
 
-        const tables = await tablesRes.json();
+        const tablesResponse = await tablesRes.json();
         const guestsData = await guestsRes.json();
 
+        // Handle case where tables API returns an array or error object
+        const tablesData: TableWithOccupancy[] = Array.isArray(tablesResponse) ? tablesResponse : [];
         const guests = guestsData.guests || [];
         const assigned = guests.filter((g: { tableId: string | null }) => g.tableId).length;
+        const totalPax = guests.reduce((sum: number, g: { pax?: number }) => sum + (g.pax || 1), 0);
 
+        // Calculate seat statistics
+        const totalSeats = tablesData.reduce((sum, t) => sum + t.seats, 0);
+        const occupiedSeats = tablesData.reduce((sum, t) => sum + (t._sum?.pax || 0), 0);
+        const fullTables = tablesData.filter((t) => (t._sum?.pax || 0) >= t.seats).length;
+
+        setTables(tablesData);
         setStats({
-          totalTables: tables.length || 0,
+          totalTables: tablesData.length || 0,
           totalGuests: guests.length,
+          totalPax,
           assignedGuests: assigned,
           unassignedGuests: guests.length - assigned,
+          totalSeats,
+          occupiedSeats,
+          fullTables,
         });
       } catch (error) {
         console.error("Failed to fetch stats:", error);
@@ -319,6 +345,95 @@ export default function AdminDashboard() {
                 {stats.assignedGuests} of {stats.totalGuests} guests have been assigned to tables
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Table Occupancy Overview */}
+        {tables.length > 0 && (
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-semibold text-[#3D3D3D]"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Table Occupancy
+              </h2>
+              {stats && (
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                    Full ({stats.fullTables})
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                    Partial
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#9CAF88]"></span>
+                    Available
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {tables.map((table) => {
+                const occupied = table._sum?.pax || 0;
+                const available = table.seats - occupied;
+                const percentage = (occupied / table.seats) * 100;
+                const isFull = available <= 0;
+                const isPartial = occupied > 0 && !isFull;
+
+                return (
+                  <div
+                    key={table.id}
+                    className={`wedding-card rounded-xl p-4 relative overflow-hidden transition-all ${
+                      isFull ? 'ring-2 ring-red-300 bg-red-50/50' : ''
+                    }`}
+                  >
+                    {/* Status indicator */}
+                    <div className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ${
+                      isFull ? 'bg-red-500' : isPartial ? 'bg-amber-500' : 'bg-[#9CAF88]'
+                    }`} />
+
+                    <p className="font-semibold text-[#3D3D3D] text-sm mb-2">{table.name}</p>
+
+                    {/* Progress bar */}
+                    <div className="h-2 bg-[#F7E7CE] rounded-full overflow-hidden mb-2">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          isFull ? 'bg-red-500' : isPartial ? 'bg-amber-500' : 'bg-[#9CAF88]'
+                        }`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#6B6B6B]">
+                        {occupied}/{table.seats} seats
+                      </span>
+                      {isFull ? (
+                        <span className="text-red-600 font-medium">FULL</span>
+                      ) : (
+                        <span className="text-[#9CAF88]">{available} left</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary */}
+            {stats && (
+              <div className="mt-4 flex items-center justify-center gap-6 text-sm text-[#6B6B6B]">
+                <span>
+                  <strong className="text-[#3D3D3D]">{stats.occupiedSeats}</strong> / {stats.totalSeats} total seats occupied
+                </span>
+                <span className="text-[#E8D5A3]">|</span>
+                <span>
+                  <strong className="text-[#3D3D3D]">{stats.totalSeats - stats.occupiedSeats}</strong> seats available
+                </span>
+              </div>
+            )}
           </div>
         )}
       </main>

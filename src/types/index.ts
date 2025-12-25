@@ -23,6 +23,9 @@ export interface Table {
   _count?: {
     guests: number;
   };
+  _sum?: {
+    pax: number | null;
+  };
 }
 
 export interface Fixture {
@@ -44,6 +47,7 @@ export interface Guest {
   phone: string | null;
   email: string | null;
   notes: string | null;
+  pax: number;
   seatNumber: number | null;
   tableId: string | null;
   table?: Table | null;

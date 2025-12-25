@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Papa from "papaparse";
 import { Button, Card, Input, Modal, SearchBar } from "@/components/ui";
-import { Guest, Table } from "@/types";
+import { FloorPlanCanvas } from "@/components/features/floor-plan";
+import { Guest, Table, Venue, Fixture } from "@/types";
 
 interface ParsedGuest {
   name: string;
   phone: string;
   email: string;
   notes: string;
+  pax: string;
   tableName: string;
   error?: string;
 }
@@ -26,6 +28,8 @@ interface ImportResult {
 export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -36,9 +40,11 @@ export default function GuestsPage() {
     phone: "",
     email: "",
     notes: "",
+    pax: "1",
     tableId: "",
     seatNumber: "",
   });
+  const [formError, setFormError] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [parsedGuests, setParsedGuests] = useState<ParsedGuest[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -59,16 +65,28 @@ export default function GuestsPage() {
 
     async function fetchData() {
       try {
-        const [guestsRes, tablesRes] = await Promise.all([
+        const [guestsRes, tablesRes, venueRes] = await Promise.all([
           fetch(`/api/guests?search=${searchQuery}`),
           fetch("/api/tables"),
+          fetch("/api/venues"),
         ]);
 
         const guestsData = await guestsRes.json();
         const tablesData = await tablesRes.json();
+        const venueData = await venueRes.json();
 
         setGuests(guestsData.guests || []);
-        setTables(tablesData || []);
+        setTables(Array.isArray(tablesData) ? tablesData : []);
+
+        if (venueData && !venueData.error) {
+          setVenue({
+            id: venueData.id,
+            name: venueData.name,
+            width: venueData.width,
+            height: venueData.height,
+          });
+          setFixtures(venueData.fixtures || []);
+        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -81,6 +99,7 @@ export default function GuestsPage() {
 
   const handleAddGuest = async () => {
     if (!formData.name.trim()) return;
+    setFormError(null);
 
     try {
       const response = await fetch("/api/guests", {
@@ -91,6 +110,7 @@ export default function GuestsPage() {
           phone: formData.phone || null,
           email: formData.email || null,
           notes: formData.notes || null,
+          pax: parseInt(formData.pax) || 1,
           tableId: formData.tableId || null,
           seatNumber: formData.seatNumber ? parseInt(formData.seatNumber) : null,
         }),
@@ -99,16 +119,25 @@ export default function GuestsPage() {
       if (response.ok) {
         const newGuest = await response.json();
         setGuests((prev) => [...prev, newGuest]);
+        // Refresh tables to update seat counts
+        const tablesRes = await fetch("/api/tables");
+        const tablesData = await tablesRes.json();
+        setTables(Array.isArray(tablesData) ? tablesData : []);
         resetForm();
         setShowAddModal(false);
+      } else {
+        const errorData = await response.json();
+        setFormError(errorData.error || "Failed to add guest");
       }
     } catch (error) {
       console.error("Failed to add guest:", error);
+      setFormError("Failed to add guest");
     }
   };
 
   const handleUpdateGuest = async () => {
     if (!selectedGuest || !formData.name.trim()) return;
+    setFormError(null);
 
     try {
       const response = await fetch(`/api/guests/${selectedGuest.id}`, {
@@ -119,6 +148,7 @@ export default function GuestsPage() {
           phone: formData.phone || null,
           email: formData.email || null,
           notes: formData.notes || null,
+          pax: parseInt(formData.pax) || 1,
           tableId: formData.tableId || null,
           seatNumber: formData.seatNumber ? parseInt(formData.seatNumber) : null,
         }),
@@ -129,12 +159,20 @@ export default function GuestsPage() {
         setGuests((prev) =>
           prev.map((g) => (g.id === selectedGuest.id ? updatedGuest : g))
         );
+        // Refresh tables to update seat counts
+        const tablesRes = await fetch("/api/tables");
+        const tablesData = await tablesRes.json();
+        setTables(Array.isArray(tablesData) ? tablesData : []);
         resetForm();
         setShowEditModal(false);
         setSelectedGuest(null);
+      } else {
+        const errorData = await response.json();
+        setFormError(errorData.error || "Failed to update guest");
       }
     } catch (error) {
       console.error("Failed to update guest:", error);
+      setFormError("Failed to update guest");
     }
   };
 
@@ -161,9 +199,11 @@ export default function GuestsPage() {
       phone: guest.phone || "",
       email: guest.email || "",
       notes: guest.notes || "",
+      pax: guest.pax?.toString() || "1",
       tableId: guest.tableId || "",
       seatNumber: guest.seatNumber?.toString() || "",
     });
+    setFormError(null);
     setShowEditModal(true);
   };
 
@@ -173,9 +213,11 @@ export default function GuestsPage() {
       phone: "",
       email: "",
       notes: "",
+      pax: "1",
       tableId: "",
       seatNumber: "",
     });
+    setFormError(null);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,6 +242,7 @@ export default function GuestsPage() {
           const phone = getValue(["phone", "phone number", "tel", "telephone", "mobile"]);
           const email = getValue(["email", "e-mail", "email address"]);
           const notes = getValue(["notes", "remarks", "note", "comments", "comment"]);
+          const pax = getValue(["pax", "party size", "seats", "guests", "number of guests"]) || "1";
           const tableName = getValue(["table", "table name", "table number", "assigned table"]);
 
           return {
@@ -207,6 +250,7 @@ export default function GuestsPage() {
             phone,
             email,
             notes,
+            pax,
             tableName,
             error: !name ? "Name is required" : undefined,
           };
@@ -246,6 +290,7 @@ export default function GuestsPage() {
             phone: g.phone || undefined,
             email: g.email || undefined,
             notes: g.notes || undefined,
+            pax: parseInt(g.pax) || 1,
             tableName: g.tableName || undefined,
           })),
         }),
@@ -413,6 +458,39 @@ export default function GuestsPage() {
           </div>
         </div>
 
+        {/* Floor Plan Layout */}
+        {venue && tables.length > 0 && (
+          <div className="wedding-card rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-[#3D3D3D]" style={{ fontFamily: 'var(--font-display)' }}>
+                Venue Layout
+              </h2>
+              <div className="flex items-center gap-4 text-xs text-[#6B6B6B]">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#C9A227]"></span>
+                  Occupied Seat
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#F5E1DA] border border-[#E8D5A3]"></span>
+                  Available Seat
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#E8B4B4] border border-[#D4A0A0]"></span>
+                  Full Table
+                </span>
+              </div>
+            </div>
+            <FloorPlanCanvas
+              venue={venue}
+              tables={tables}
+              fixtures={fixtures}
+              showOccupiedSeats={true}
+              showFullTableHighlight={true}
+              className="rounded-xl overflow-hidden"
+            />
+          </div>
+        )}
+
         {/* Guest List */}
         <div className="wedding-card rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -420,8 +498,8 @@ export default function GuestsPage() {
               <thead>
                 <tr className="border-b border-[#E8D5A3] bg-[#F7E7CE]/30">
                   <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Name</th>
+                  <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Pax</th>
                   <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Table</th>
-                  <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Seat</th>
                   <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Phone</th>
                   <th className="text-right py-4 px-6 font-medium text-[#3D3D3D]">Actions</th>
                 </tr>
@@ -443,6 +521,11 @@ export default function GuestsPage() {
                         <span className="font-medium text-[#3D3D3D]">{guest.name}</span>
                       </td>
                       <td className="py-4 px-6">
+                        <span className="text-[#6B6B6B] bg-[#F7E7CE]/50 px-2 py-1 rounded text-sm">
+                          {guest.pax || 1}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
                         {guest.table ? (
                           <span className="text-[#9CAF88] bg-[#9CAF88]/10 px-3 py-1 rounded-full text-sm font-medium">
                             {guest.table.name}
@@ -452,9 +535,6 @@ export default function GuestsPage() {
                             Unassigned
                           </span>
                         )}
-                      </td>
-                      <td className="py-4 px-6 text-[#6B6B6B]">
-                        {guest.seatNumber || "-"}
                       </td>
                       <td className="py-4 px-6 text-[#6B6B6B]">
                         {guest.phone || "-"}
@@ -492,25 +572,43 @@ export default function GuestsPage() {
         title="Add New Guest"
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name *</label>
-            <input
-              type="text"
-              placeholder="Guest name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Phone</label>
-            <input
-              type="text"
-              placeholder="Phone number"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
-            />
+          {formError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              {formError}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name *</label>
+              <input
+                type="text"
+                placeholder="Guest name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Phone</label>
+              <input
+                type="text"
+                placeholder="Phone number"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Pax (Party Size)</label>
+              <input
+                type="number"
+                min={1}
+                placeholder="1"
+                value={formData.pax}
+                onChange={(e) => setFormData({ ...formData, pax: e.target.value })}
+                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Email</label>
@@ -532,26 +630,39 @@ export default function GuestsPage() {
               onChange={(e) => setFormData({ ...formData, tableId: e.target.value })}
             >
               <option value="">-- Unassigned --</option>
-              {tables.map((table) => (
-                <option key={table.id} value={table.id}>
-                  {table.name} ({table._count?.guests || 0}/{table.seats} seats)
-                </option>
-              ))}
+              {tables.map((table) => {
+                const occupied = table._sum?.pax || 0;
+                const available = table.seats - occupied;
+                const guestPax = parseInt(formData.pax) || 1;
+                const isFull = available <= 0;
+                const notEnoughSeats = available < guestPax && !isFull;
+                return (
+                  <option
+                    key={table.id}
+                    value={table.id}
+                    disabled={isFull}
+                  >
+                    {table.name} ({occupied}/{table.seats}){isFull ? ' - FULL' : notEnoughSeats ? ` - Only ${available} left` : ` - ${available} available`}
+                  </option>
+                );
+              })}
             </select>
-          </div>
-          {formData.tableId && (
-            <div>
-              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Seat Number</label>
-              <input
-                type="number"
-                min={1}
-                placeholder="Seat number"
-                value={formData.seatNumber}
-                onChange={(e) => setFormData({ ...formData, seatNumber: e.target.value })}
-                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
-              />
+            {/* Table status legend */}
+            <div className="flex items-center gap-4 mt-2 text-xs text-[#6B6B6B]">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#9CAF88]"></span>
+                Available
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                Low seats
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                Full
+              </span>
             </div>
-          )}
+          </div>
           <div>
             <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Notes</label>
             <input
@@ -593,25 +704,43 @@ export default function GuestsPage() {
         title="Edit Guest"
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name *</label>
-            <input
-              type="text"
-              placeholder="Guest name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Phone</label>
-            <input
-              type="text"
-              placeholder="Phone number"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
-            />
+          {formError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              {formError}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name *</label>
+              <input
+                type="text"
+                placeholder="Guest name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Phone</label>
+              <input
+                type="text"
+                placeholder="Phone number"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Pax (Party Size)</label>
+              <input
+                type="number"
+                min={1}
+                placeholder="1"
+                value={formData.pax}
+                onChange={(e) => setFormData({ ...formData, pax: e.target.value })}
+                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Email</label>
@@ -633,26 +762,42 @@ export default function GuestsPage() {
               onChange={(e) => setFormData({ ...formData, tableId: e.target.value })}
             >
               <option value="">-- Unassigned --</option>
-              {tables.map((table) => (
-                <option key={table.id} value={table.id}>
-                  {table.name} ({table._count?.guests || 0}/{table.seats} seats)
-                </option>
-              ))}
+              {tables.map((table) => {
+                const occupied = table._sum?.pax || 0;
+                // For edit modal, if guest is already at this table, count their current pax as available
+                const currentGuestPaxAtTable = selectedGuest?.tableId === table.id ? (selectedGuest?.pax || 1) : 0;
+                const effectiveOccupied = occupied - currentGuestPaxAtTable;
+                const available = table.seats - effectiveOccupied;
+                const guestPax = parseInt(formData.pax) || 1;
+                const isFull = (table.seats - occupied) <= 0 && selectedGuest?.tableId !== table.id;
+                const notEnoughSeats = available < guestPax && !isFull;
+                return (
+                  <option
+                    key={table.id}
+                    value={table.id}
+                    disabled={isFull}
+                  >
+                    {table.name} ({occupied}/{table.seats}){isFull ? ' - FULL' : notEnoughSeats ? ` - Only ${available} left` : ` - ${available} available`}
+                  </option>
+                );
+              })}
             </select>
-          </div>
-          {formData.tableId && (
-            <div>
-              <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Seat Number</label>
-              <input
-                type="number"
-                min={1}
-                placeholder="Seat number"
-                value={formData.seatNumber}
-                onChange={(e) => setFormData({ ...formData, seatNumber: e.target.value })}
-                className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
-              />
+            {/* Table status legend */}
+            <div className="flex items-center gap-4 mt-2 text-xs text-[#6B6B6B]">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#9CAF88]"></span>
+                Available
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                Low seats
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                Full
+              </span>
             </div>
-          )}
+          </div>
           <div>
             <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Notes</label>
             <input
@@ -751,7 +896,7 @@ export default function GuestsPage() {
             <div>
               <div className="mb-4 text-sm text-[#6B6B6B]">
                 <p className="font-medium text-[#3D3D3D] mb-1">Expected CSV columns:</p>
-                <p className="mb-2">name (required), phone, email, notes, table</p>
+                <p className="mb-2">name (required), phone, email, pax, notes, table</p>
                 <a
                   href="/sample-guests.csv"
                   download
@@ -778,6 +923,7 @@ export default function GuestsPage() {
                     <thead className="bg-[#F7E7CE]/50 sticky top-0">
                       <tr>
                         <th className="text-left py-2 px-3 font-medium">Name</th>
+                        <th className="text-left py-2 px-3 font-medium">Pax</th>
                         <th className="text-left py-2 px-3 font-medium">Table</th>
                         <th className="text-left py-2 px-3 font-medium">Phone</th>
                         <th className="text-left py-2 px-3 font-medium">Status</th>
@@ -787,6 +933,7 @@ export default function GuestsPage() {
                       {parsedGuests.map((guest, i) => (
                         <tr key={i} className={`border-t border-[#E8D5A3]/50 ${guest.error ? 'bg-red-50' : ''}`}>
                           <td className="py-2 px-3">{guest.name || <span className="text-red-400 italic">empty</span>}</td>
+                          <td className="py-2 px-3 text-[#6B6B6B]">{guest.pax || "1"}</td>
                           <td className="py-2 px-3 text-[#6B6B6B]">{guest.tableName || "-"}</td>
                           <td className="py-2 px-3 text-[#6B6B6B]">{guest.phone || "-"}</td>
                           <td className="py-2 px-3">

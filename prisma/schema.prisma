@@ -64,6 +64,7 @@ model Guest {
   phone      String?
   email      String?
   notes      String?
+  pax        Int      @default(1)
   seatNumber Int?
   tableId    String?
   createdAt  DateTime @default(now())

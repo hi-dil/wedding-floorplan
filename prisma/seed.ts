@@ -18,7 +18,7 @@ async function main() {
   // Create venue
   const venue = await prisma.venue.create({
     data: {
-      name: "Majma Mall Wedding Venue",
+      name: "Razzi & Azra Wedding",
       width: 1800,
       height: 700,
     },

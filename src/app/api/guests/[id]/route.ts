@@ -38,7 +38,48 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { name, phone, email, notes, tableId, seatNumber } = body;
+    const { name, phone, email, notes, tableId, seatNumber, pax } = body;
+
+    const guestPax = pax !== undefined ? Math.max(1, parseInt(pax) || 1) : undefined;
+
+    // Validate seat availability if assigning to a table
+    if (tableId) {
+      const table = await prisma.table.findUnique({
+        where: { id: tableId },
+        include: {
+          guests: {
+            select: { id: true, pax: true },
+          },
+        },
+      });
+
+      if (!table) {
+        return NextResponse.json({ error: "Table not found" }, { status: 404 });
+      }
+
+      // Get current guest's pax if they're already at this table
+      const currentGuest = await prisma.guest.findUnique({
+        where: { id },
+        select: { pax: true, tableId: true },
+      });
+
+      // Calculate occupancy excluding this guest if they're already at the table
+      const currentOccupancy = table.guests
+        .filter((g) => g.id !== id)
+        .reduce((sum, g) => sum + g.pax, 0);
+
+      const newPax = guestPax ?? currentGuest?.pax ?? 1;
+      const availableSeats = table.seats - currentOccupancy;
+
+      if (newPax > availableSeats) {
+        return NextResponse.json(
+          {
+            error: `Not enough seats. Table "${table.name}" has ${availableSeats} seat(s) available, but guest requires ${newPax} seat(s).`,
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     const guest = await prisma.guest.update({
       where: { id },
@@ -47,6 +88,7 @@ export async function PUT(
         phone: phone || null,
         email: email || null,
         notes: notes || null,
+        ...(guestPax !== undefined && { pax: guestPax }),
         tableId: tableId || null,
         seatNumber: seatNumber || null,
       },
