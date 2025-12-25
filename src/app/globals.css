@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Wedding Color Palette */
+  --ivory: #FFFEF7;
+  --champagne: #F7E7CE;
+  --gold: #C9A227;
+  --gold-light: #E8D5A3;
+  --blush: #F5E1DA;
+  --sage: #9CAF88;
+  --sage-dark: #7A9568;
+  --charcoal: #3D3D3D;
+  --warm-gray: #6B6B6B;
+
+  --background: var(--ivory);
+  --foreground: var(--charcoal);
+
+  /* Font families */
+  --font-display: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+  --font-body: var(--font-body), 'Outfit', system-ui, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+}
+
+/* Elegant decorative flourish */
+.flourish {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.flourish::before,
+.flourish::after {
+  content: '';
+  height: 1px;
+  width: 60px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* Ornamental divider */
+.ornament {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.ornament::before {
+  content: '❧';
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.7;
+}
+
+/* Wedding card styling */
+.wedding-card {
+  background: linear-gradient(135deg, white 0%, var(--champagne) 100%);
+  border: 1px solid var(--gold-light);
+  box-shadow:
+    0 4px 6px -1px rgba(201, 162, 39, 0.1),
+    0 2px 4px -1px rgba(201, 162, 39, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Subtle pattern overlay */
+.pattern-overlay {
+  position: relative;
+}
+
+.pattern-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A227' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated shimmer for highlights */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--gold-light) 0%,
+    var(--gold) 50%,
+    var(--gold-light) 100%
+  );
+  background-size: 200% auto;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--champagne);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gold-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
 }

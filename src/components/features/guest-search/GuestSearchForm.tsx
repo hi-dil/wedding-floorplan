@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { SearchBar } from "@/components/ui";
 import { Guest, Table } from "@/types";
 
@@ -18,8 +18,15 @@ export function GuestSearchForm({ onSelect }: GuestSearchFormProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const justSelectedRef = useRef(false);
 
   const searchGuests = useCallback(async (searchQuery: string) => {
+    // Don't search if we just selected a result
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+
     if (searchQuery.length < 2) {
       setResults([]);
       setShowDropdown(false);
@@ -50,8 +57,10 @@ export function GuestSearchForm({ onSelect }: GuestSearchFormProps) {
   }, [query, searchGuests]);
 
   const handleSelect = (result: SearchResult) => {
+    justSelectedRef.current = true;
     setQuery(result.guest.name);
     setShowDropdown(false);
+    setResults([]);
     onSelect(result);
   };
 

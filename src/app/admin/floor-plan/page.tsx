@@ -447,9 +447,10 @@ export default function FloorPlanEditor() {
         y={h.y}
         width={handleSize}
         height={handleSize}
-        fill="#3b82f6"
-        stroke="#1d4ed8"
+        fill="#C9A227"
+        stroke="#B8922A"
         strokeWidth="1"
+        rx="2"
         style={{ cursor: cursorMap[h.id] }}
         onMouseDown={(e) => handleResizeMouseDown(e, fixture, h.id)}
       />
@@ -458,16 +459,20 @@ export default function FloorPlanEditor() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      <div className="min-h-screen bg-[#FFFEF7] flex items-center justify-center pattern-overlay">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F7E7CE]/50 via-transparent to-[#F7E7CE]/30 pointer-events-none" />
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#C9A227] border-t-transparent"></div>
+        </div>
       </div>
     );
   }
 
   if (!venue) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p>No venue found</p>
+      <div className="min-h-screen bg-[#FFFEF7] flex items-center justify-center pattern-overlay">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F7E7CE]/50 via-transparent to-[#F7E7CE]/30 pointer-events-none" />
+        <p className="relative text-[#6B6B6B]">No venue found</p>
       </div>
     );
   }
@@ -475,60 +480,93 @@ export default function FloorPlanEditor() {
   const selectedTable = selectedTables.length === 1 ? selectedTables[0] : null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#FFFEF7] pattern-overlay">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#F7E7CE]/50 via-transparent to-[#F7E7CE]/30 pointer-events-none" />
+
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="relative bg-white/80 backdrop-blur-sm border-b border-[#E8D5A3]">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/admin" className="text-gray-500 hover:text-gray-700">
+              <Link href="/admin" className="text-[#6B6B6B] hover:text-[#C9A227] transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Floor Plan Editor</h1>
+              <div>
+                <h1
+                  className="text-2xl font-semibold text-[#3D3D3D]"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  Floor Plan Editor
+                </h1>
+                <p className="text-sm text-[#6B6B6B]">Arrange tables and fixtures for your venue</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" onClick={() => setShowAddModal(true)}>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 border border-[#E8D5A3] text-[#3D3D3D] rounded-xl hover:bg-[#F7E7CE]/50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
                 Add Table
-              </Button>
-              <Button onClick={handleSavePositions} isLoading={isSaving}>
-                Save Changes
-              </Button>
+              </button>
+              <button
+                onClick={handleSavePositions}
+                disabled={isSaving}
+                className="px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-[#C9A227]/20 disabled:opacity-50"
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Save Changes
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="relative max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Floor Plan Canvas */}
           <div className="lg:col-span-3">
-            <Card className="p-4">
+            <div className="wedding-card rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#6B6B6B]">
                   Click to select. Ctrl+click for multi-select. Drag to move.
                 </p>
                 <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
+                  <button
                     onClick={handleSelectRow}
                     disabled={selectedTables.length === 0}
+                    className="px-3 py-1.5 text-sm border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Select Row
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
+                  </button>
+                  <button
                     onClick={handleSelectColumn}
                     disabled={selectedTables.length === 0}
+                    className="px-3 py-1.5 text-sm border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Select Column
-                  </Button>
+                  </button>
                 </div>
               </div>
-              <div className="overflow-auto bg-gray-50 rounded-lg">
+              <div className="overflow-auto bg-[#FFFEF7] rounded-lg border border-[#E8D5A3]">
                 <svg
                   viewBox={`0 0 ${venue.width} ${venue.height}`}
                   className="w-full h-auto min-h-[500px]"
@@ -539,14 +577,14 @@ export default function FloorPlanEditor() {
                   onClick={handleCanvasClick}
                 >
                   {/* Background */}
-                  <rect x="0" y="0" width={venue.width} height={venue.height} fill="#f8fafc" />
+                  <rect x="0" y="0" width={venue.width} height={venue.height} fill="#FFFEF7" />
                   <rect
                     x="10"
                     y="10"
                     width={venue.width - 20}
                     height={venue.height - 20}
                     fill="none"
-                    stroke="#cbd5e1"
+                    stroke="#E8D5A3"
                     strokeWidth="2"
                     rx="8"
                   />
@@ -561,8 +599,8 @@ export default function FloorPlanEditor() {
                           y={fixture.y}
                           width={fixture.width}
                           height={fixture.height}
-                          fill={fixture.color || "#94a3b8"}
-                          stroke={isSelected ? "#3b82f6" : "#64748b"}
+                          fill={fixture.color || "#9CAF88"}
+                          stroke={isSelected ? "#C9A227" : "#7A9568"}
                           strokeWidth={isSelected ? 3 : 1}
                           rx="4"
                           style={{ cursor: "move" }}
@@ -575,7 +613,7 @@ export default function FloorPlanEditor() {
                           dominantBaseline="middle"
                           fontSize="14"
                           fontWeight="600"
-                          fill="#374151"
+                          fill="#3D3D3D"
                           style={{ pointerEvents: "none" }}
                         >
                           {fixture.name}
@@ -603,8 +641,8 @@ export default function FloorPlanEditor() {
                             cx={centerX}
                             cy={centerY}
                             r={radius}
-                            fill={isSelected ? "#22c55e" : "#f5a623"}
-                            stroke={isSelected ? "#16a34a" : "#d97706"}
+                            fill={isSelected ? "#C9A227" : "#F7E7CE"}
+                            stroke={isSelected ? "#B8922A" : "#E8D5A3"}
                             strokeWidth={isSelected ? 3 : 2}
                           />
                         ) : (
@@ -613,8 +651,8 @@ export default function FloorPlanEditor() {
                             y={table.y}
                             width={table.width}
                             height={table.height}
-                            fill={isSelected ? "#22c55e" : "#f5a623"}
-                            stroke={isSelected ? "#16a34a" : "#d97706"}
+                            fill={isSelected ? "#C9A227" : "#F7E7CE"}
+                            stroke={isSelected ? "#B8922A" : "#E8D5A3"}
                             strokeWidth={isSelected ? 3 : 2}
                             rx="4"
                           />
@@ -632,8 +670,8 @@ export default function FloorPlanEditor() {
                                 cx={seatX}
                                 cy={seatY}
                                 r="6"
-                                fill="#e5e7eb"
-                                stroke="#9ca3af"
+                                fill="#F5E1DA"
+                                stroke="#E8D5A3"
                                 strokeWidth="1"
                               />
                             );
@@ -643,9 +681,9 @@ export default function FloorPlanEditor() {
                           y={centerY}
                           textAnchor="middle"
                           dominantBaseline="middle"
-                          fontSize="11"
-                          fontWeight="600"
-                          fill="#ffffff"
+                          fontSize="14"
+                          fontWeight="700"
+                          fill={isSelected ? "#FFFFFF" : "#3D3D3D"}
                           style={{ pointerEvents: "none" }}
                         >
                           {table.name.replace("Table ", "")}
@@ -655,79 +693,106 @@ export default function FloorPlanEditor() {
                   })}
                 </svg>
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Properties Panel */}
           <div className="lg:col-span-1">
-            <Card>
+            <div className="wedding-card rounded-xl p-6">
               {/* Fixture Properties */}
               {selectedFixture && (
                 <>
-                  <h3 className="text-lg font-semibold mb-4">Fixture Properties</h3>
+                  <h3
+                    className="text-lg font-semibold text-[#3D3D3D] mb-4"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    Fixture Properties
+                  </h3>
                   <div className="space-y-4">
-                    <Input
-                      label="Name"
-                      value={selectedFixture.name}
-                      onChange={(e) =>
-                        setSelectedFixture({ ...selectedFixture, name: e.target.value })
-                      }
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        label="X"
-                        type="number"
-                        value={Math.round(selectedFixture.x)}
+                    <div>
+                      <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={selectedFixture.name}
                         onChange={(e) =>
-                          setSelectedFixture({
-                            ...selectedFixture,
-                            x: parseFloat(e.target.value) || 0,
-                          })
+                          setSelectedFixture({ ...selectedFixture, name: e.target.value })
                         }
-                      />
-                      <Input
-                        label="Y"
-                        type="number"
-                        value={Math.round(selectedFixture.y)}
-                        onChange={(e) =>
-                          setSelectedFixture({
-                            ...selectedFixture,
-                            y: parseFloat(e.target.value) || 0,
-                          })
-                        }
+                        className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        label="Width"
-                        type="number"
-                        value={Math.round(selectedFixture.width)}
-                        onChange={(e) =>
-                          setSelectedFixture({
-                            ...selectedFixture,
-                            width: parseFloat(e.target.value) || 30,
-                          })
-                        }
-                      />
-                      <Input
-                        label="Height"
-                        type="number"
-                        value={Math.round(selectedFixture.height)}
-                        onChange={(e) =>
-                          setSelectedFixture({
-                            ...selectedFixture,
-                            height: parseFloat(e.target.value) || 30,
-                          })
-                        }
-                      />
+                      <div>
+                        <label className="block text-sm font-medium text-[#3D3D3D] mb-1">X</label>
+                        <input
+                          type="number"
+                          value={Math.round(selectedFixture.x)}
+                          onChange={(e) =>
+                            setSelectedFixture({
+                              ...selectedFixture,
+                              x: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Y</label>
+                        <input
+                          type="number"
+                          value={Math.round(selectedFixture.y)}
+                          onChange={(e) =>
+                            setSelectedFixture({
+                              ...selectedFixture,
+                              y: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+                        />
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button className="flex-1" onClick={handleUpdateFixture}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Width</label>
+                        <input
+                          type="number"
+                          value={Math.round(selectedFixture.width)}
+                          onChange={(e) =>
+                            setSelectedFixture({
+                              ...selectedFixture,
+                              width: parseFloat(e.target.value) || 30,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Height</label>
+                        <input
+                          type="number"
+                          value={Math.round(selectedFixture.height)}
+                          onChange={(e) =>
+                            setSelectedFixture({
+                              ...selectedFixture,
+                              height: parseFloat(e.target.value) || 30,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={handleUpdateFixture}
+                        className="flex-1 px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white rounded-lg transition-colors shadow-lg shadow-[#C9A227]/20"
+                      >
                         Update
-                      </Button>
-                      <Button variant="danger" onClick={handleDeleteFixture}>
+                      </button>
+                      <button
+                        onClick={handleDeleteFixture}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                      >
                         Delete
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </>
@@ -736,34 +801,46 @@ export default function FloorPlanEditor() {
               {/* Single Table Properties */}
               {selectedTable && !selectedFixture && (
                 <>
-                  <h3 className="text-lg font-semibold mb-4">Table Properties</h3>
+                  <h3
+                    className="text-lg font-semibold text-[#3D3D3D] mb-4"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    Table Properties
+                  </h3>
                   <div className="space-y-4">
-                    <Input
-                      label="Name"
-                      value={selectedTable.name}
-                      onChange={(e) =>
-                        setSelectedTables([{ ...selectedTable, name: e.target.value }])
-                      }
-                    />
-                    <Input
-                      label="Seats"
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={selectedTable.seats}
-                      onChange={(e) =>
-                        setSelectedTables([{
-                          ...selectedTable,
-                          seats: parseInt(e.target.value) || 1,
-                        }])
-                      }
-                    />
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={selectedTable.name}
+                        onChange={(e) =>
+                          setSelectedTables([{ ...selectedTable, name: e.target.value }])
+                        }
+                        className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Seats</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={selectedTable.seats}
+                        onChange={(e) =>
+                          setSelectedTables([{
+                            ...selectedTable,
+                            seats: parseInt(e.target.value) || 1,
+                          }])
+                        }
+                        className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#3D3D3D] mb-1">
                         Shape
                       </label>
                       <select
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227] bg-white"
                         value={selectedTable.shape}
                         onChange={(e) =>
                           setSelectedTables([{
@@ -776,15 +853,21 @@ export default function FloorPlanEditor() {
                         <option value="RECTANGULAR">Rectangular</option>
                       </select>
                     </div>
-                    <div className="flex gap-2">
-                      <Button className="flex-1" onClick={handleUpdateTable}>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={handleUpdateTable}
+                        className="flex-1 px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white rounded-lg transition-colors shadow-lg shadow-[#C9A227]/20"
+                      >
                         Update
-                      </Button>
-                      <Button variant="danger" onClick={handleDeleteTable}>
+                      </button>
+                      <button
+                        onClick={handleDeleteTable}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                      >
                         Delete
-                      </Button>
+                      </button>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#6B6B6B]">
                       Position: ({Math.round(selectedTable.x)}, {Math.round(selectedTable.y)})
                     </p>
                   </div>
@@ -794,22 +877,29 @@ export default function FloorPlanEditor() {
               {/* Multi-Table Properties */}
               {selectedTables.length > 1 && !selectedFixture && (
                 <>
-                  <h3 className="text-lg font-semibold mb-4">Multiple Tables</h3>
+                  <h3
+                    className="text-lg font-semibold text-[#3D3D3D] mb-4"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    Multiple Tables
+                  </h3>
                   <div className="space-y-4">
-                    <p className="text-gray-600">
+                    <p className="text-[#6B6B6B]">
                       {selectedTables.length} tables selected
                     </p>
                     <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        className="flex-1"
+                      <button
                         onClick={() => setSelectedTables([])}
+                        className="flex-1 px-4 py-2 border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors"
                       >
                         Deselect All
-                      </Button>
-                      <Button variant="danger" onClick={handleDeleteTable}>
+                      </button>
+                      <button
+                        onClick={handleDeleteTable}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                      >
                         Delete All
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </>
@@ -818,13 +908,42 @@ export default function FloorPlanEditor() {
               {/* No Selection */}
               {selectedTables.length === 0 && !selectedFixture && (
                 <>
-                  <h3 className="text-lg font-semibold mb-4">Properties</h3>
-                  <p className="text-gray-500 text-sm">
-                    Click a table or fixture to edit its properties
-                  </p>
+                  <h3
+                    className="text-lg font-semibold text-[#3D3D3D] mb-4"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    Properties
+                  </h3>
+                  <div className="text-center py-8">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-[#E8D5A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                    <p className="text-[#6B6B6B] text-sm">
+                      Click a table or fixture to edit its properties
+                    </p>
+                  </div>
                 </>
               )}
-            </Card>
+            </div>
+
+            {/* Legend */}
+            <div className="wedding-card rounded-xl p-4 mt-4">
+              <h4 className="text-sm font-medium text-[#3D3D3D] mb-3">Legend</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#F7E7CE] border border-[#E8D5A3]"></div>
+                  <span className="text-[#6B6B6B]">Table</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#C9A227] border border-[#B8922A]"></div>
+                  <span className="text-[#6B6B6B]">Selected Table</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-[#9CAF88] border border-[#7A9568]"></div>
+                  <span className="text-[#6B6B6B]">Fixture/Walkway</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -836,17 +955,29 @@ export default function FloorPlanEditor() {
         title="Add New Table"
       >
         <div className="space-y-4">
-          <Input
-            label="Table Name"
-            placeholder="e.g., Table 41"
-            value={newTableName}
-            onChange={(e) => setNewTableName(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+          <div>
+            <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Table Name</label>
+            <input
+              type="text"
+              placeholder="e.g., Table 41"
+              value={newTableName}
+              onChange={(e) => setNewTableName(e.target.value)}
+              className="w-full px-4 py-2 border border-[#E8D5A3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A227]/50 focus:border-[#C9A227]"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="flex-1 px-4 py-2 border border-[#E8D5A3] text-[#6B6B6B] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors"
+            >
               Cancel
-            </Button>
-            <Button onClick={handleAddTable}>Add Table</Button>
+            </button>
+            <button
+              onClick={handleAddTable}
+              className="flex-1 px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white rounded-lg transition-colors shadow-lg shadow-[#C9A227]/20"
+            >
+              Add Table
+            </button>
           </div>
         </div>
       </Modal>
