@@ -452,19 +452,15 @@ export function FloorPlanCanvas({
             return (
               <g
                 key={table.id}
-                onClick={(e) => handleTableTap(table, e)}
-                onTouchEnd={(e) => {
-                  if (!isPinching && !isDragging.current) {
-                    handleTableTap(table, e);
-                  }
-                }}
-                style={{ cursor: onTableClick ? "pointer" : "default" }}
-                filter={isActive ? "url(#tapGlow)" : isHighlighted ? "url(#tableGlow)" : "url(#tableShadow)"}
-                className={cn(
-                  "transition-transform duration-200",
-                  isActive && "animate-table-tap"
-                )}
-              >
+                  onClick={(e) => handleTableTap(table, e)}
+                  onTouchEnd={(e) => {
+                    if (!isPinching && !isDragging.current) {
+                      handleTableTap(table, e);
+                    }
+                  }}
+                  style={{ cursor: onTableClick ? "pointer" : "default" }}
+                  filter={isActive ? "url(#tapGlow)" : isHighlighted ? "url(#tableGlow)" : "url(#tableShadow)"}
+                >
                 {/* Invisible touch target - larger hit area */}
                 <circle
                   cx={centerX}
@@ -534,32 +530,6 @@ export function FloorPlanCanvas({
                 >
                   {table.name.replace("Table ", "")}
                 </text>
-
-                {/* Highlighted table pulse ring */}
-                {isHighlighted && (
-                  <circle
-                    cx={centerX}
-                    cy={centerY}
-                    r={radius + 6}
-                    fill="none"
-                    stroke="#C9A227"
-                    strokeWidth="2"
-                    opacity="0.5"
-                  >
-                    <animate
-                      attributeName="r"
-                      values={`${radius + 6};${radius + 12};${radius + 6}`}
-                      dur="2s"
-                      repeatCount="indefinite"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0.5;0.2;0.5"
-                      dur="2s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                )}
               </g>
             );
           })}
