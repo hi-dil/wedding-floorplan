@@ -24,13 +24,12 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 
-# Start the app (run migrations manually: docker-compose exec app node_modules/.bin/prisma migrate deploy)
+# Start the app
 CMD ["node", "server.js"]

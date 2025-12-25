@@ -17,6 +17,23 @@ services:
     networks:
       - floor-plan-network
 
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: builder
+    container_name: floor-plan-migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-floorplan}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-floorplan}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - floor-plan-network
+    command: ["./node_modules/.bin/prisma", "migrate", "deploy"]
+    profiles:
+      - migrate
+
   app:
     build:
       context: .
