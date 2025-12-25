@@ -35,6 +35,7 @@ services:
         condition: service_healthy
     networks:
       - floor-plan-network
+      - cloudflare-net
 
 volumes:
   postgres_data:
@@ -42,3 +43,5 @@ volumes:
 networks:
   floor-plan-network:
     driver: bridge
+  cloudflare-net:
+    external: true
