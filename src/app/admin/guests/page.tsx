@@ -324,6 +324,16 @@ export default function GuestsPage() {
                 onChange={handleFileSelect}
                 className="hidden"
               />
+              <a
+                href="/sample-guests.csv"
+                download
+                className="px-4 py-2 text-[#6B6B6B] hover:text-[#C9A227] font-medium transition-colors flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Template
+              </a>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-4 py-2 border border-[#C9A227] text-[#C9A227] hover:bg-[#C9A227]/10 font-medium rounded-xl transition-all duration-200 flex items-center gap-2"
@@ -741,7 +751,17 @@ export default function GuestsPage() {
             <div>
               <div className="mb-4 text-sm text-[#6B6B6B]">
                 <p className="font-medium text-[#3D3D3D] mb-1">Expected CSV columns:</p>
-                <p>name (required), phone, email, notes, table</p>
+                <p className="mb-2">name (required), phone, email, notes, table</p>
+                <a
+                  href="/sample-guests.csv"
+                  download
+                  className="inline-flex items-center gap-1 text-[#C9A227] hover:text-[#B8922A] font-medium"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download sample CSV
+                </a>
               </div>
 
               <div className="mb-4">
