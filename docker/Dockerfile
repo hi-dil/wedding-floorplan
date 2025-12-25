@@ -27,11 +27,10 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 
-# Run migrations and start (use node to run prisma directly)
-CMD ["sh", "-c", "node ./node_modules/prisma/build/index.js migrate deploy && node server.js"]
+# Start the app (run migrations manually: docker-compose exec app node_modules/.bin/prisma migrate deploy)
+CMD ["node", "server.js"]
