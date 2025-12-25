@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Venue {
+  id        String    @id @default(cuid())
+  name      String
+  width     Int       @default(1200)
+  height    Int       @default(800)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tables   Table[]
+  fixtures Fixture[]
+}
+
+model Table {
+  id        String     @id @default(cuid())
+  name      String
+  x         Float
+  y         Float
+  width     Float      @default(80)
+  height    Float      @default(80)
+  seats     Int        @default(10)
+  shape     TableShape @default(ROUND)
+  rotation  Float      @default(0)
+  venueId   String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  venue  Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  guests Guest[]
+
+  @@index([venueId])
+}
+
+model Fixture {
+  id        String      @id @default(cuid())
+  name      String
+  type      FixtureType
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+  rotation  Float       @default(0)
+  color     String?     @default("#94a3b8")
+  venueId   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId])
+}
+
+model Guest {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String?
+  email      String?
+  notes      String?
+  seatNumber Int?
+  tableId    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  table Table? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+
+  @@index([tableId])
+  @@index([name])
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([expiresAt])
+}
+
+enum TableShape {
+  ROUND
+  RECTANGULAR
+  OVAL
+}
+
+enum FixtureType {
+  STAGE
+  CATERER
+  ENTRANCE
+  WALKWAY
+  CUSTOM
+}
