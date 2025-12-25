@@ -67,19 +67,25 @@ export function FloorPlanCanvas({
     return Math.max(1, scaleToFillHeight);
   }, [venue.width, venue.height]);
 
+  // Track if initial fit has been applied
+  const initialFitApplied = useRef(false);
+
   // Fit to container on mount and resize
   useEffect(() => {
     const updateFitScale = () => {
       const scale = calculateFitScale();
       setFitScale(scale);
-      // Apply fit scale on initial load
-      setTransform({ scale, translateX: 0, translateY: 0 });
+      // Only apply fit scale on initial load, not on resize
+      if (!initialFitApplied.current) {
+        setTransform({ scale, translateX: 0, translateY: 0 });
+        initialFitApplied.current = true;
+      }
     };
 
     // Initial calculation after a small delay to ensure container is rendered
     const timer = setTimeout(updateFitScale, 100);
 
-    // Update on resize
+    // Update fitScale on resize (but don't reset transform)
     window.addEventListener("resize", updateFitScale);
 
     return () => {
@@ -272,6 +278,59 @@ export function FloorPlanCanvas({
 
   // Check if currently at fit scale
   const isAtFitScale = Math.abs(transform.scale - fitScale) < 0.01 && transform.translateX === 0 && transform.translateY === 0;
+
+  // Center view on highlighted table when it changes
+  useEffect(() => {
+    if (!highlightedTableId || !containerRef.current) return;
+
+    // Find the highlighted table
+    const table = tables.find((t) => t.id === highlightedTableId);
+    if (!table) return;
+
+    // Get container dimensions
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+
+    // Calculate the SVG's natural dimensions when rendered
+    const aspectRatio = venue.width / venue.height;
+    const svgRenderedWidth = containerWidth;
+    const svgRenderedHeight = containerWidth / aspectRatio;
+
+    // Scale factors from SVG coordinates to rendered pixels
+    const scaleX = svgRenderedWidth / venue.width;
+    const scaleY = svgRenderedHeight / venue.height;
+
+    // Table center in SVG coordinates
+    const tableCenterX = table.x + table.width / 2;
+    const tableCenterY = table.y + table.height / 2;
+
+    // Table center in rendered pixels (before transform)
+    const tablePixelX = tableCenterX * scaleX;
+    const tablePixelY = tableCenterY * scaleY;
+
+    // Target zoom level for focused view
+    const targetScale = Math.min(1.8, Math.max(fitScale, 1.2));
+
+    // Calculate translation to center the table
+    // The SVG transform origin is at center, so we need to account for that
+    const svgCenterX = svgRenderedWidth / 2;
+    const svgCenterY = svgRenderedHeight / 2;
+
+    // Offset from SVG center to table position
+    const offsetX = svgCenterX - tablePixelX;
+    const offsetY = svgCenterY - tablePixelY;
+
+    // Apply scaling to the offset and center in container
+    const translateX = offsetX * targetScale + (containerWidth - svgRenderedWidth * targetScale) / 2;
+    const translateY = offsetY * targetScale + (containerHeight - svgRenderedHeight * targetScale) / 2;
+
+    setTransform({
+      scale: targetScale,
+      translateX,
+      translateY,
+    });
+  }, [highlightedTableId, tables, venue.width, venue.height, fitScale]);
 
   return (
     <div className={cn("relative w-full", className)}>
