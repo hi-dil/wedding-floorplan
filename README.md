@@ -83,10 +83,14 @@ docker-compose logs -f app
 
 ```bash
 # Run database migrations
-docker-compose exec app npx prisma migrate deploy
+docker-compose run --rm --entrypoint sh migrate -c \
+  'echo "DATABASE_URL=postgresql://${POSTGRES_USER:-floorplan}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-floorplan}" > .env && \
+  ./node_modules/.bin/prisma migrate deploy'
 
-# Seed with sample data (optional - creates 48 tables with sample layout)
-docker-compose exec app npm run db:seed
+# Seed with sample data (optional - creates 49 tables with sample layout)
+docker-compose run --rm --entrypoint sh migrate -c \
+  'echo "DATABASE_URL=postgresql://${POSTGRES_USER:-floorplan}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-floorplan}" > .env && \
+  npm run db:seed'
 ```
 
 ### Production with Reverse Proxy (Recommended)
@@ -133,7 +137,9 @@ git pull
 docker-compose up -d --build
 
 # Run any new migrations
-docker-compose exec app npx prisma migrate deploy
+docker-compose run --rm --entrypoint sh migrate -c \
+  'echo "DATABASE_URL=postgresql://${POSTGRES_USER:-floorplan}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-floorplan}" > .env && \
+  ./node_modules/.bin/prisma migrate deploy'
 ```
 
 ### Backup Database
@@ -219,7 +225,7 @@ For production, set a strong password via the `ADMIN_PASSWORD` environment varia
 
 - **Frontend**: Next.js 16, React 19, Tailwind CSS
 - **Backend**: Next.js API routes
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM 7
 - **Authentication**: JWT with jose
 - **Fonts**: Cormorant Garamond (display), Outfit (body)
 
