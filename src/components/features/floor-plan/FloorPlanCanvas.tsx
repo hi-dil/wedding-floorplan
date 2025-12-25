@@ -89,7 +89,7 @@ export function FloorPlanCanvas({
   }, [calculateFitScale]);
 
   // Calculate distance between two touch points
-  const getTouchDistance = (touches: TouchList) => {
+  const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return 0;
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
@@ -97,7 +97,7 @@ export function FloorPlanCanvas({
   };
 
   // Calculate center point between two touches
-  const getTouchCenter = (touches: TouchList) => {
+  const getTouchCenter = (touches: React.TouchList) => {
     if (touches.length < 2) {
       return { x: touches[0].clientX, y: touches[0].clientY };
     }
