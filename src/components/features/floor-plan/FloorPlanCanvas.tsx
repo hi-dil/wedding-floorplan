@@ -545,8 +545,20 @@ export function FloorPlanCanvas({
                     stroke="#C9A227"
                     strokeWidth="2"
                     opacity="0.5"
-                    className="animate-ping-slow"
-                  />
+                  >
+                    <animate
+                      attributeName="r"
+                      values={`${radius + 6};${radius + 12};${radius + 6}`}
+                      dur="2s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0.5;0.2;0.5"
+                      dur="2s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
                 )}
               </g>
             );
@@ -576,25 +588,7 @@ export function FloorPlanCanvas({
           animation: table-tap 0.3s ease-out;
         }
 
-        @keyframes ping-slow {
-          0% {
-            transform: scale(1);
-            opacity: 0.5;
-          }
-          50% {
-            transform: scale(1.15);
-            opacity: 0.3;
-          }
-          100% {
-            transform: scale(1);
-            opacity: 0.5;
-          }
-        }
-
-        .animate-ping-slow {
-          animation: ping-slow 2s ease-in-out infinite;
-        }
-      `}</style>
+              `}</style>
     </div>
   );
 }
