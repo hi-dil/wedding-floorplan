@@ -215,6 +215,32 @@ export function FloorPlanCanvas({
     onTableClick?.(table);
   }, [onTableClick]);
 
+  // Mouse drag for desktop
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only left click
+    isDragging.current = true;
+    lastDragPos.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging.current || transform.scale <= 1) return;
+
+    const dx = e.clientX - lastDragPos.current.x;
+    const dy = e.clientY - lastDragPos.current.y;
+
+    setTransform(prev => ({
+      ...prev,
+      translateX: prev.translateX + dx,
+      translateY: prev.translateY + dy,
+    }));
+
+    lastDragPos.current = { x: e.clientX, y: e.clientY };
+  }, [transform.scale]);
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
+
   // Mouse wheel zoom for desktop
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -317,12 +343,16 @@ export function FloorPlanCanvas({
       {/* Main canvas container */}
       <div
         ref={containerRef}
-        className="w-full overflow-hidden bg-[#FFFEF7] rounded-xl border border-[#E8D5A3] touch-none"
+        className="w-full overflow-hidden bg-[#FFFEF7] rounded-xl border border-[#E8D5A3] touch-none select-none"
+        style={{ minHeight: "400px", maxHeight: "70vh", cursor: transform.scale > 1 ? "grab" : "default" }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
-        style={{ minHeight: "400px", maxHeight: "70vh" }}
       >
         <svg
           viewBox={`0 0 ${venue.width} ${venue.height}`}
