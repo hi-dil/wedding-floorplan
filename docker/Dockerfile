@@ -33,5 +33,5 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 
-# Run migrations and start
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node server.js"]
+# Run migrations and start (use node to run prisma directly)
+CMD ["sh", "-c", "node ./node_modules/prisma/build/index.js migrate deploy && node server.js"]
