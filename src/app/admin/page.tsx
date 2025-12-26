@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ExportPdfButton } from "@/components/features/export";
 
 interface TableWithOccupancy {
   id: string;
@@ -134,6 +135,7 @@ export default function AdminDashboard() {
                 </svg>
                 Guest View
               </Link>
+              <ExportPdfButton />
               <button
                 onClick={handleLogout}
                 className="text-sm text-[#6B6B6B] hover:text-red-500 transition-colors flex items-center gap-1"
