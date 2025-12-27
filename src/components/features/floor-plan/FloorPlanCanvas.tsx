@@ -339,10 +339,10 @@ export function FloorPlanCanvas({
   return (
     <div className={cn("relative w-full", className)}>
       {/* Zoom Controls - Elegant jewelry-like design */}
-      <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
+      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 flex flex-col gap-1 sm:gap-1.5">
         <button
           onClick={handleZoomIn}
-          className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#E8D5A3] shadow-lg shadow-[#C9A227]/10 flex items-center justify-center text-[#C9A227] hover:bg-[#F7E7CE] hover:border-[#C9A227] active:scale-95 transition-all duration-200"
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#E8D5A3] shadow-lg shadow-[#C9A227]/10 flex items-center justify-center text-[#C9A227] hover:bg-[#F7E7CE] hover:border-[#C9A227] active:scale-95 transition-all duration-200"
           aria-label="Zoom in"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -351,7 +351,7 @@ export function FloorPlanCanvas({
         </button>
         <button
           onClick={handleZoomOut}
-          className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#E8D5A3] shadow-lg shadow-[#C9A227]/10 flex items-center justify-center text-[#C9A227] hover:bg-[#F7E7CE] hover:border-[#C9A227] active:scale-95 transition-all duration-200"
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 backdrop-blur-sm border border-[#E8D5A3] shadow-lg shadow-[#C9A227]/10 flex items-center justify-center text-[#C9A227] hover:bg-[#F7E7CE] hover:border-[#C9A227] active:scale-95 transition-all duration-200"
           aria-label="Zoom out"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -362,7 +362,7 @@ export function FloorPlanCanvas({
         <button
           onClick={handleFitToContainer}
           className={cn(
-            "w-9 h-9 rounded-full backdrop-blur-sm border shadow-lg shadow-[#C9A227]/10 flex items-center justify-center transition-all duration-200 active:scale-95",
+            "w-8 h-8 sm:w-9 sm:h-9 rounded-full backdrop-blur-sm border shadow-lg shadow-[#C9A227]/10 flex items-center justify-center transition-all duration-200 active:scale-95",
             isAtFitScale
               ? "bg-[#C9A227] border-[#B8922A] text-white"
               : "bg-white/90 border-[#E8D5A3] text-[#C9A227] hover:bg-[#F7E7CE] hover:border-[#C9A227]"
@@ -377,7 +377,7 @@ export function FloorPlanCanvas({
         <button
           onClick={handleReset}
           className={cn(
-            "w-9 h-9 rounded-full backdrop-blur-sm border shadow-lg shadow-[#C9A227]/10 flex items-center justify-center transition-all duration-200 active:scale-95",
+            "w-8 h-8 sm:w-9 sm:h-9 rounded-full backdrop-blur-sm border shadow-lg shadow-[#C9A227]/10 flex items-center justify-center transition-all duration-200 active:scale-95",
             transform.scale === 1 && transform.translateX === 0 && transform.translateY === 0
               ? "bg-[#C9A227] border-[#B8922A] text-white"
               : "bg-white/90 border-[#E8D5A3] text-[#C9A227] hover:bg-[#F7E7CE] hover:border-[#C9A227]"
@@ -390,8 +390,8 @@ export function FloorPlanCanvas({
       </div>
 
       {/* Zoom level indicator - Subtle pill */}
-      <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm border border-[#E8D5A3] shadow-sm">
-        <span className="text-xs font-medium text-[#6B6B6B]">
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/90 backdrop-blur-sm border border-[#E8D5A3] shadow-sm">
+        <span className="text-[10px] sm:text-xs font-medium text-[#6B6B6B]">
           {Math.round(transform.scale * 100)}%
         </span>
       </div>
@@ -406,8 +406,8 @@ export function FloorPlanCanvas({
       {/* Main canvas container */}
       <div
         ref={containerRef}
-        className="w-full overflow-hidden bg-[#FFFEF7] rounded-xl border border-[#E8D5A3] touch-none select-none"
-        style={{ minHeight: "400px", maxHeight: "70vh", cursor: transform.scale > 1 ? "grab" : "default" }}
+        className="w-full overflow-hidden bg-[#FFFEF7] rounded-xl border border-[#E8D5A3] touch-none select-none min-h-[250px] sm:min-h-[350px] md:min-h-[400px]"
+        style={{ maxHeight: "65vh", cursor: transform.scale > 1 ? "grab" : "default" }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -419,9 +419,8 @@ export function FloorPlanCanvas({
       >
         <svg
           viewBox={`0 0 ${venue.width} ${venue.height}`}
-          className="w-full h-auto"
+          className="w-full h-auto min-h-[250px] sm:min-h-[350px] md:min-h-[400px]"
           style={{
-            minHeight: "400px",
             transform: `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`,
             transformOrigin: "center center",
             transition: isPinching ? "none" : "transform 0.2s ease-out",

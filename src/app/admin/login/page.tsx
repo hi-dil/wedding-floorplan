@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7] flex items-center justify-center p-4 pattern-overlay">
+    <div className="min-h-screen bg-[#FFFEF7] flex items-center justify-center p-3 sm:p-4 pattern-overlay">
       {/* Decorative background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#F7E7CE]/50 via-transparent to-[#F7E7CE]/30 pointer-events-none" />
 
@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
           </svg>
         </div>
 
-        <div className="wedding-card rounded-2xl p-8 relative">
+        <div className="wedding-card rounded-2xl p-6 sm:p-8 relative">
           {/* Corner decorations */}
           <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-[#C9A227]/30 rounded-tl-lg" />
           <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-[#C9A227]/30 rounded-tr-lg" />
@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
               </svg>
             </div>
             <h1
-              className="text-3xl font-semibold text-[#3D3D3D] mb-2"
+              className="text-2xl sm:text-3xl font-semibold text-[#3D3D3D] mb-2"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Admin Portal

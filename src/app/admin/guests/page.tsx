@@ -25,12 +25,22 @@ interface ImportResult {
   errors: { row: number; name: string; error: string }[];
 }
 
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+const ITEMS_PER_PAGE = 20;
+
 export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
   const [venue, setVenue] = useState<Venue | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -49,8 +59,23 @@ export default function GuestsPage() {
   const [parsedGuests, setParsedGuests] = useState<ParsedGuest[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: ITEMS_PER_PAGE,
+    total: 0,
+    totalPages: 0,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 on search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     async function checkAuth() {
@@ -66,7 +91,7 @@ export default function GuestsPage() {
     async function fetchData() {
       try {
         const [guestsRes, tablesRes, venueRes] = await Promise.all([
-          fetch(`/api/guests?search=${searchQuery}`),
+          fetch(`/api/guests?search=${debouncedSearch}&page=${pagination.page}&limit=${ITEMS_PER_PAGE}`),
           fetch("/api/tables"),
           fetch("/api/venues"),
         ]);
@@ -76,6 +101,9 @@ export default function GuestsPage() {
         const venueData = await venueRes.json();
 
         setGuests(guestsData.guests || []);
+        if (guestsData.pagination) {
+          setPagination(guestsData.pagination);
+        }
         setTables(Array.isArray(tablesData) ? tablesData : []);
 
         if (venueData && !venueData.error) {
@@ -95,7 +123,7 @@ export default function GuestsPage() {
     }
 
     checkAuth();
-  }, [router, searchQuery]);
+  }, [router, debouncedSearch, pagination.page]);
 
   const handleAddGuest = async () => {
     if (!formData.name.trim()) return;
@@ -322,9 +350,38 @@ export default function GuestsPage() {
     setImportResult(null);
   };
 
-  const filteredGuests = guests.filter((g) =>
-    g.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      setPagination(prev => ({ ...prev, page }));
+    }
+  };
+
+  const goToPreviousPage = () => goToPage(pagination.page - 1);
+  const goToNextPage = () => goToPage(pagination.page + 1);
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const { page, totalPages } = pagination;
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+
+      for (let i = start; i <= end; i++) pages.push(i);
+
+      if (page < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   if (isLoading) {
     return (
@@ -344,7 +401,7 @@ export default function GuestsPage() {
       {/* Header */}
       <header className="relative bg-white/80 backdrop-blur-sm border-b border-[#E8D5A3]">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link href="/admin" className="text-[#6B6B6B] hover:text-[#C9A227] transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,15 +410,15 @@ export default function GuestsPage() {
               </Link>
               <div>
                 <h1
-                  className="text-2xl font-semibold text-[#3D3D3D]"
+                  className="text-xl sm:text-2xl font-semibold text-[#3D3D3D]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Guest Management
                 </h1>
-                <p className="text-sm text-[#6B6B6B]">Manage your wedding guest list</p>
+                <p className="text-xs sm:text-sm text-[#6B6B6B]">Manage your guest list</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -372,30 +429,31 @@ export default function GuestsPage() {
               <a
                 href="/sample-guests.csv"
                 download
-                className="px-4 py-2 text-[#6B6B6B] hover:text-[#C9A227] font-medium transition-colors flex items-center gap-2"
+                className="px-2 sm:px-4 py-2 text-[#6B6B6B] hover:text-[#C9A227] font-medium transition-colors flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Template
+                <span className="hidden sm:inline">Template</span>
               </a>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 border border-[#C9A227] text-[#C9A227] hover:bg-[#C9A227]/10 font-medium rounded-xl transition-all duration-200 flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 border border-[#C9A227] text-[#C9A227] hover:bg-[#C9A227]/10 font-medium rounded-xl transition-all duration-200 flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Import CSV
+                <span className="hidden sm:inline">Import CSV</span>
+                <span className="sm:hidden">Import</span>
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-[#C9A227]/20"
+                className="px-3 sm:px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-[#C9A227]/20"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Add Guest
+                <span className="hidden sm:inline">Add Guest</span>
               </button>
             </div>
           </div>
@@ -425,36 +483,36 @@ export default function GuestsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="wedding-card rounded-xl p-4 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-[#C9A227]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+          <div className="wedding-card rounded-xl p-3 sm:p-4 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#C9A227]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
             <p
-              className="text-3xl font-semibold text-[#C9A227]"
+              className="text-2xl sm:text-3xl font-semibold text-[#C9A227]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {guests.length}
             </p>
-            <p className="text-sm text-[#6B6B6B]">Total Guests</p>
+            <p className="text-xs sm:text-sm text-[#6B6B6B]">Total</p>
           </div>
-          <div className="wedding-card rounded-xl p-4 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-[#9CAF88]/20 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="wedding-card rounded-xl p-3 sm:p-4 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#9CAF88]/20 rounded-full -translate-y-1/2 translate-x-1/2" />
             <p
-              className="text-3xl font-semibold text-[#9CAF88]"
+              className="text-2xl sm:text-3xl font-semibold text-[#9CAF88]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {guests.filter((g) => g.tableId).length}
             </p>
-            <p className="text-sm text-[#6B6B6B]">Assigned</p>
+            <p className="text-xs sm:text-sm text-[#6B6B6B]">Assigned</p>
           </div>
-          <div className="wedding-card rounded-xl p-4 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-[#F5E1DA]/50 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="wedding-card rounded-xl p-3 sm:p-4 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#F5E1DA]/50 rounded-full -translate-y-1/2 translate-x-1/2" />
             <p
-              className="text-3xl font-semibold text-[#D4A574]"
+              className="text-2xl sm:text-3xl font-semibold text-[#D4A574]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {guests.filter((g) => !g.tableId).length}
             </p>
-            <p className="text-sm text-[#6B6B6B]">Unassigned</p>
+            <p className="text-xs sm:text-sm text-[#6B6B6B]">Unassigned</p>
           </div>
         </div>
 
@@ -465,18 +523,21 @@ export default function GuestsPage() {
               <h2 className="text-lg font-semibold text-[#3D3D3D]" style={{ fontFamily: 'var(--font-display)' }}>
                 Venue Layout
               </h2>
-              <div className="flex items-center gap-4 text-xs text-[#6B6B6B]">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-[#6B6B6B]">
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-[#C9A227]"></span>
-                  Occupied Seat
+                  <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#C9A227]"></span>
+                  <span className="hidden sm:inline">Occupied Seat</span>
+                  <span className="sm:hidden">Occupied</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-[#F5E1DA] border border-[#E8D5A3]"></span>
-                  Available Seat
+                  <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#F5E1DA] border border-[#E8D5A3]"></span>
+                  <span className="hidden sm:inline">Available Seat</span>
+                  <span className="sm:hidden">Available</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-[#E8B4B4] border border-[#D4A0A0]"></span>
-                  Full Table
+                  <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#E8B4B4] border border-[#D4A0A0]"></span>
+                  <span className="hidden sm:inline">Full Table</span>
+                  <span className="sm:hidden">Full</span>
                 </span>
               </div>
             </div>
@@ -491,8 +552,8 @@ export default function GuestsPage() {
           </div>
         )}
 
-        {/* Guest List */}
-        <div className="wedding-card rounded-xl overflow-hidden">
+        {/* Guest List - Table for md+ screens */}
+        <div className="wedding-card rounded-xl overflow-hidden hidden md:block">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -505,7 +566,7 @@ export default function GuestsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredGuests.length === 0 ? (
+                {guests.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-12 text-[#6B6B6B]">
                       <svg className="w-12 h-12 mx-auto mb-3 text-[#E8D5A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -515,7 +576,7 @@ export default function GuestsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredGuests.map((guest) => (
+                  guests.map((guest) => (
                     <tr key={guest.id} className="border-b border-[#E8D5A3]/50 hover:bg-[#F7E7CE]/20 transition-colors">
                       <td className="py-4 px-6">
                         <span className="font-medium text-[#3D3D3D]">{guest.name}</span>
@@ -560,6 +621,120 @@ export default function GuestsPage() {
             </table>
           </div>
         </div>
+
+        {/* Guest List - Card view for mobile */}
+        <div className="md:hidden space-y-3">
+          {guests.length === 0 ? (
+            <div className="wedding-card rounded-xl p-8 text-center text-[#6B6B6B]">
+              <svg className="w-12 h-12 mx-auto mb-3 text-[#E8D5A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              No guests found
+            </div>
+          ) : (
+            guests.map((guest) => (
+              <div key={guest.id} className="wedding-card rounded-xl p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-[#3D3D3D] block truncate">{guest.name}</span>
+                    <span className="text-[#6B6B6B] text-sm">{guest.pax || 1} pax</span>
+                  </div>
+                  <div className="flex gap-3 ml-2">
+                    <button
+                      onClick={() => openEditModal(guest)}
+                      className="text-[#C9A227] hover:text-[#B8922A] text-sm font-medium transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGuest(guest)}
+                      className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {guest.table ? (
+                    <span className="text-[#9CAF88] bg-[#9CAF88]/10 px-2 py-0.5 rounded-full text-xs font-medium">
+                      {guest.table.name}
+                    </span>
+                  ) : (
+                    <span className="text-[#D4A574] bg-[#F5E1DA]/50 px-2 py-0.5 rounded-full text-xs font-medium">
+                      Unassigned
+                    </span>
+                  )}
+                  {guest.phone && (
+                    <span className="text-[#6B6B6B] text-xs">{guest.phone}</span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Info text */}
+            <p className="text-sm text-[#6B6B6B] order-2 sm:order-1">
+              Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} guests
+            </p>
+
+            {/* Pagination controls */}
+            <div className="flex items-center gap-1 order-1 sm:order-2">
+              {/* Previous button */}
+              <button
+                onClick={goToPreviousPage}
+                disabled={pagination.page === 1}
+                className="p-2 rounded-lg border border-[#E8D5A3] text-[#6B6B6B] hover:bg-[#F7E7CE]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous page"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* Page numbers - hidden on very small screens */}
+              <div className="hidden sm:flex items-center gap-1">
+                {getPageNumbers().map((pageNum, index) => (
+                  pageNum === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-2 text-[#6B6B6B]">...</span>
+                  ) : (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum as number)}
+                      className={`min-w-[36px] h-9 rounded-lg font-medium transition-colors ${
+                        pagination.page === pageNum
+                          ? 'bg-[#C9A227] text-white'
+                          : 'border border-[#E8D5A3] text-[#6B6B6B] hover:bg-[#F7E7CE]/50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                ))}
+              </div>
+
+              {/* Mobile page indicator */}
+              <span className="sm:hidden px-3 text-sm text-[#6B6B6B]">
+                {pagination.page} / {pagination.totalPages}
+              </span>
+
+              {/* Next button */}
+              <button
+                onClick={goToNextPage}
+                disabled={pagination.page === pagination.totalPages}
+                className="p-2 rounded-lg border border-[#E8D5A3] text-[#6B6B6B] hover:bg-[#F7E7CE]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next page"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Add Guest Modal */}
@@ -577,8 +752,8 @@ export default function GuestsPage() {
               {formError}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name *</label>
               <input
                 type="text"
@@ -648,7 +823,7 @@ export default function GuestsPage() {
               })}
             </select>
             {/* Table status legend */}
-            <div className="flex items-center gap-4 mt-2 text-xs text-[#6B6B6B]">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-xs text-[#6B6B6B]">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-[#9CAF88]"></span>
                 Available
@@ -709,8 +884,8 @@ export default function GuestsPage() {
               {formError}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-[#3D3D3D] mb-1">Name *</label>
               <input
                 type="text"
@@ -783,7 +958,7 @@ export default function GuestsPage() {
               })}
             </select>
             {/* Table status legend */}
-            <div className="flex items-center gap-4 mt-2 text-xs text-[#6B6B6B]">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-xs text-[#6B6B6B]">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-[#9CAF88]"></span>
                 Available

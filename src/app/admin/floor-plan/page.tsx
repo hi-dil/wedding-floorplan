@@ -486,7 +486,7 @@ export default function FloorPlanEditor() {
       {/* Header */}
       <header className="relative bg-white/80 backdrop-blur-sm border-b border-[#E8D5A3]">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link href="/admin" className="text-[#6B6B6B] hover:text-[#C9A227] transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,28 +495,28 @@ export default function FloorPlanEditor() {
               </Link>
               <div>
                 <h1
-                  className="text-2xl font-semibold text-[#3D3D3D]"
+                  className="text-xl sm:text-2xl font-semibold text-[#3D3D3D]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Floor Plan Editor
                 </h1>
-                <p className="text-sm text-[#6B6B6B]">Arrange tables and fixtures for your venue</p>
+                <p className="text-xs sm:text-sm text-[#6B6B6B]">Arrange tables and fixtures</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 border border-[#E8D5A3] text-[#3D3D3D] rounded-xl hover:bg-[#F7E7CE]/50 transition-colors flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 border border-[#E8D5A3] text-[#3D3D3D] rounded-xl hover:bg-[#F7E7CE]/50 transition-colors flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Add Table
+                <span className="hidden sm:inline">Add Table</span>
               </button>
               <button
                 onClick={handleSavePositions}
                 disabled={isSaving}
-                className="px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-[#C9A227]/20 disabled:opacity-50"
+                className="px-3 sm:px-4 py-2 bg-[#C9A227] hover:bg-[#B8922A] text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-[#C9A227]/20 disabled:opacity-50"
               >
                 {isSaving ? (
                   <>
@@ -524,14 +524,15 @@ export default function FloorPlanEditor() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Saving...
+                    <span className="hidden sm:inline">Saving...</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Save Changes
+                    <span className="hidden sm:inline">Save Changes</span>
+                    <span className="sm:hidden">Save</span>
                   </>
                 )}
               </button>
@@ -541,36 +542,39 @@ export default function FloorPlanEditor() {
       </header>
 
       <main className="relative max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Floor Plan Canvas */}
-          <div className="lg:col-span-3">
-            <div className="wedding-card rounded-xl p-4">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-[#6B6B6B]">
+          <div className="md:col-span-2 lg:col-span-3">
+            <div className="wedding-card rounded-xl p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <p className="hidden sm:block text-sm text-[#6B6B6B]">
                   Click to select. Ctrl+click for multi-select. Drag to move.
+                </p>
+                <p className="sm:hidden text-xs text-[#6B6B6B]">
+                  Tap to select. Drag to move.
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSelectRow}
                     disabled={selectedTables.length === 0}
-                    className="px-3 py-1.5 text-sm border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Select Row
+                    <span className="hidden sm:inline">Select </span>Row
                   </button>
                   <button
                     onClick={handleSelectColumn}
                     disabled={selectedTables.length === 0}
-                    className="px-3 py-1.5 text-sm border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border border-[#E8D5A3] text-[#3D3D3D] rounded-lg hover:bg-[#F7E7CE]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Select Column
+                    <span className="hidden sm:inline">Select </span>Column
                   </button>
                 </div>
               </div>
               <div className="overflow-auto bg-[#FFFEF7] rounded-lg border border-[#E8D5A3]">
                 <svg
                   viewBox={`0 0 ${venue.width} ${venue.height}`}
-                  className="w-full h-auto min-h-[500px]"
-                  style={{ maxHeight: "70vh" }}
+                  className="w-full h-auto min-h-[300px] sm:min-h-[400px] md:min-h-[500px]"
+                  style={{ maxHeight: "65vh" }}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
@@ -697,8 +701,8 @@ export default function FloorPlanEditor() {
           </div>
 
           {/* Properties Panel */}
-          <div className="lg:col-span-1">
-            <div className="wedding-card rounded-xl p-6">
+          <div className="md:col-span-1">
+            <div className="wedding-card rounded-xl p-4 sm:p-6">
               {/* Fixture Properties */}
               {selectedFixture && (
                 <>

@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-[#6B6B6B]">Manage your wedding event</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <Link
                 href="/"
                 className="text-sm text-[#6B6B6B] hover:text-[#C9A227] transition-colors flex items-center gap-1"
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                Guest View
+                <span className="hidden sm:inline">Guest View</span>
               </Link>
               <ExportPdfButton />
               <button
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
@@ -361,17 +361,17 @@ export default function AdminDashboard() {
                 Table Occupancy
               </h2>
               {stats && (
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500"></span>
                     Full ({stats.fullTables})
                   </span>
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-amber-500"></span>
                     Partial
                   </span>
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-[#9CAF88]"></span>
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#9CAF88]"></span>
                     Available
                   </span>
                 </div>
@@ -426,11 +426,11 @@ export default function AdminDashboard() {
 
             {/* Summary */}
             {stats && (
-              <div className="mt-4 flex items-center justify-center gap-6 text-sm text-[#6B6B6B]">
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-sm text-[#6B6B6B]">
                 <span>
                   <strong className="text-[#3D3D3D]">{stats.occupiedSeats}</strong> / {stats.totalSeats} total seats occupied
                 </span>
-                <span className="text-[#E8D5A3]">|</span>
+                <span className="hidden sm:inline text-[#E8D5A3]">|</span>
                 <span>
                   <strong className="text-[#3D3D3D]">{stats.totalSeats - stats.occupiedSeats}</strong> seats available
                 </span>
