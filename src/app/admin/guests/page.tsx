@@ -32,6 +32,13 @@ interface Pagination {
   totalPages: number;
 }
 
+interface GuestStats {
+  total: number;
+  assigned: number;
+  checkedIn: number;
+  notCheckedIn: number;
+}
+
 const ITEMS_PER_PAGE = 20;
 
 export default function GuestsPage() {
@@ -65,6 +72,12 @@ export default function GuestsPage() {
     limit: ITEMS_PER_PAGE,
     total: 0,
     totalPages: 0,
+  });
+  const [guestStats, setGuestStats] = useState<GuestStats>({
+    total: 0,
+    assigned: 0,
+    checkedIn: 0,
+    notCheckedIn: 0,
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -104,6 +117,9 @@ export default function GuestsPage() {
         setGuests(guestsData.guests || []);
         if (guestsData.pagination) {
           setPagination(guestsData.pagination);
+        }
+        if (guestsData.stats) {
+          setGuestStats(guestsData.stats);
         }
         setTables(Array.isArray(tablesData) ? tablesData : []);
 
@@ -536,7 +552,7 @@ export default function GuestsPage() {
               className="text-2xl sm:text-3xl font-semibold text-[#C9A227]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {pagination.total}
+              {guestStats.total}
             </p>
             <p className="text-xs sm:text-sm text-[#6B6B6B]">Total</p>
           </div>
@@ -546,7 +562,7 @@ export default function GuestsPage() {
               className="text-2xl sm:text-3xl font-semibold text-[#9CAF88]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {guests.filter((g) => g.tableId).length}
+              {guestStats.assigned}
             </p>
             <p className="text-xs sm:text-sm text-[#6B6B6B]">Assigned</p>
           </div>
@@ -556,7 +572,7 @@ export default function GuestsPage() {
               className="text-2xl sm:text-3xl font-semibold text-emerald-600"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {guests.filter((g) => g.checkedInAt).length}
+              {guestStats.checkedIn}
             </p>
             <p className="text-xs sm:text-sm text-[#6B6B6B]">Hadir</p>
           </div>
@@ -566,7 +582,7 @@ export default function GuestsPage() {
               className="text-2xl sm:text-3xl font-semibold text-[#D4A574]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {guests.filter((g) => !g.checkedInAt).length}
+              {guestStats.notCheckedIn}
             </p>
             <p className="text-xs sm:text-sm text-[#6B6B6B]">Belum</p>
           </div>

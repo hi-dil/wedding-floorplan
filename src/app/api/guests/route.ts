@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
-    const [guests, total] = await Promise.all([
+    const [guests, total, assigned, checkedIn, paxAggregate] = await Promise.all([
       prisma.guest.findMany({
         where,
         include: {
@@ -29,7 +29,12 @@ export async function GET(request: NextRequest) {
         orderBy: { name: "asc" },
       }),
       prisma.guest.count({ where }),
+      prisma.guest.count({ where: { ...where, tableId: { not: null } } }),
+      prisma.guest.count({ where: { ...where, checkedInAt: { not: null } } }),
+      prisma.guest.aggregate({ where, _sum: { pax: true } }),
     ]);
+
+    const totalPax = paxAggregate._sum.pax || 0;
 
     return NextResponse.json({
       guests,
@@ -38,6 +43,13 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      stats: {
+        total,
+        assigned,
+        checkedIn,
+        notCheckedIn: total - checkedIn,
+        totalPax,
       },
     });
   } catch (error) {

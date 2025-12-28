@@ -45,7 +45,7 @@ export default function AdminDashboard() {
       try {
         const [tablesRes, guestsRes] = await Promise.all([
           fetch("/api/tables"),
-          fetch("/api/guests"),
+          fetch("/api/guests?limit=1"), // Just need stats, not all guests
         ]);
 
         const tablesResponse = await tablesRes.json();
@@ -53,9 +53,7 @@ export default function AdminDashboard() {
 
         // Handle case where tables API returns an array or error object
         const tablesData: TableWithOccupancy[] = Array.isArray(tablesResponse) ? tablesResponse : [];
-        const guests = guestsData.guests || [];
-        const assigned = guests.filter((g: { tableId: string | null }) => g.tableId).length;
-        const totalPax = guests.reduce((sum: number, g: { pax?: number }) => sum + (g.pax || 1), 0);
+        const guestStats = guestsData.stats || { total: 0, assigned: 0, totalPax: 0 };
 
         // Calculate seat statistics
         const totalSeats = tablesData.reduce((sum, t) => sum + t.seats, 0);
@@ -65,10 +63,10 @@ export default function AdminDashboard() {
         setTables(tablesData);
         setStats({
           totalTables: tablesData.length || 0,
-          totalGuests: guests.length,
-          totalPax,
-          assignedGuests: assigned,
-          unassignedGuests: guests.length - assigned,
+          totalGuests: guestStats.total,
+          totalPax: guestStats.totalPax,
+          assignedGuests: guestStats.assigned,
+          unassignedGuests: guestStats.total - guestStats.assigned,
           totalSeats,
           occupiedSeats,
           fullTables,
