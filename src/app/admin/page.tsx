@@ -224,7 +224,7 @@ export default function AdminDashboard() {
                 {stats?.totalPax || 0}
               </p>
               <p className="text-xs text-[#6B6B6B] mt-1">
-                {stats?.totalSeats || 0} seats available
+                {(stats?.totalSeats || 0) - (stats?.totalPax || 0)} of {stats?.totalSeats || 0} seats available
               </p>
             </div>
           </div>
