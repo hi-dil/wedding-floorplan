@@ -12,6 +12,65 @@ interface SearchResult {
   table: Table | null;
 }
 
+type Language = "ms" | "en";
+
+const translations = {
+  ms: {
+    welcomeTo: "Selamat Datang ke",
+    subtitle: "Kami berbesar hati menjemput anda meraikan hari bahagia ini bersama kami",
+    findYourSeat: "Cari Tempat Duduk Anda",
+    searchDescription: "Masukkan nama anda untuk mengetahui meja anda",
+    found: "Jumpa!",
+    seatedAt: "Anda duduk di",
+    venueLayout: "Pelan Lantai",
+    tapTable: "Tekan mana-mana meja untuk lihat senarai tetamu",
+    mapLegend: "Petunjuk",
+    guestTables: "Meja Tetamu",
+    yourTable: "Meja Anda",
+    occupiedSeat: "Tempat Duduk Diisi",
+    availableSeat: "Tempat Duduk Kosong",
+    entrance: "Pintu Masuk",
+    wishingYou: "Semoga majlis ini memberi kebahagiaan kepada anda",
+    seats: "tempat duduk",
+    guests: "tetamu",
+    guest: "tetamu",
+    assigned: "ditetapkan",
+    noGuests: "Belum ada tetamu ditetapkan",
+    pax: "orang",
+    preparing: "Sila tunggu...",
+    unableToLoad: "Tidak Dapat Dimuatkan",
+    noVenueData: "Data tidak dijumpai. Sila hubungi penganjur.",
+    goToAdmin: "Ke Panel Admin",
+  },
+  en: {
+    welcomeTo: "Welcome to",
+    subtitle: "We are delighted to have you celebrate this special day with us",
+    findYourSeat: "Find Your Seat",
+    searchDescription: "Enter your name to discover your table assignment",
+    found: "Found!",
+    seatedAt: "You are seated at",
+    venueLayout: "Venue Layout",
+    tapTable: "Tap any table to view the guest list",
+    mapLegend: "Map Legend",
+    guestTables: "Guest Tables",
+    yourTable: "Your Table",
+    occupiedSeat: "Occupied Seat",
+    availableSeat: "Available Seat",
+    entrance: "Entrance",
+    wishingYou: "Wishing you a wonderful celebration",
+    seats: "seats",
+    guests: "guests",
+    guest: "guest",
+    assigned: "assigned",
+    noGuests: "No guests assigned yet",
+    pax: "pax",
+    preparing: "Preparing your experience...",
+    unableToLoad: "Unable to Load",
+    noVenueData: "No venue data found. Please set up the venue first.",
+    goToAdmin: "Go to Admin Panel",
+  },
+};
+
 // Decorative SVG components
 const FloralCorner = ({ className = "" }: { className?: string }) => (
   <svg className={className} width="80" height="80" viewBox="0 0 80 80" fill="none">
@@ -46,6 +105,9 @@ export default function Home() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [tableGuests, setTableGuests] = useState<Guest[]>([]);
   const [isLoadingGuests, setIsLoadingGuests] = useState(false);
+  const [lang, setLang] = useState<Language>("ms");
+
+  const t = translations[lang];
 
   useEffect(() => {
     async function fetchFloorPlan() {
@@ -114,7 +176,7 @@ export default function Home() {
             </svg>
           </div>
           <p className="text-[#6B6B6B] font-light tracking-wide" style={{ fontFamily: 'var(--font-body)' }}>
-            Preparing your experience...
+            {t.preparing}
           </p>
         </div>
       </div>
@@ -131,16 +193,16 @@ export default function Home() {
             </svg>
           </div>
           <h2 className="text-2xl font-semibold text-[#3D3D3D] mb-3" style={{ fontFamily: 'var(--font-display)' }}>
-            Unable to Load
+            {t.unableToLoad}
           </h2>
           <p className="text-[#6B6B6B] mb-6 font-light">
-            {error || "No venue data found. Please set up the venue first."}
+            {error || t.noVenueData}
           </p>
           <Link
             href="/admin"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#C9A227] text-white rounded-full hover:bg-[#9CAF88] transition-colors font-medium"
           >
-            Go to Admin Panel
+            {t.goToAdmin}
           </Link>
         </div>
       </div>
@@ -154,9 +216,20 @@ export default function Home() {
         {/* Decorative background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#F7E7CE] via-[#FFFEF7] to-transparent" />
 
+        {/* Language Toggle */}
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={() => setLang(lang === "ms" ? "en" : "ms")}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full border border-[#E8D5A3] text-sm font-medium text-[#3D3D3D] hover:bg-white transition-colors shadow-sm"
+          >
+            <span className={lang === "ms" ? "text-[#C9A227]" : "text-[#6B6B6B]"}>BM</span>
+            <span className="text-[#E8D5A3]">|</span>
+            <span className={lang === "en" ? "text-[#C9A227]" : "text-[#6B6B6B]"}>EN</span>
+          </button>
+        </div>
+
         {/* Floral corners */}
         <FloralCorner className="absolute top-4 left-4 text-[#C9A227] rotate-0" />
-        <FloralCorner className="absolute top-4 right-4 text-[#C9A227] rotate-90" />
 
         <div className="relative max-w-4xl mx-auto px-4 py-12 text-center">
           {/* Decorative top element */}
@@ -170,7 +243,7 @@ export default function Home() {
 
           {/* Main title */}
           <p className="text-sm tracking-[0.3em] text-[#9CAF88] uppercase mb-4 font-light">
-            Welcome to
+            {t.welcomeTo}
           </p>
 
           <h1
@@ -183,7 +256,7 @@ export default function Home() {
           <OrnamentalDivider />
 
           <p className="text-lg text-[#6B6B6B] font-light max-w-md mx-auto leading-relaxed">
-            We are delighted to have you celebrate this special day with us
+            {t.subtitle}
           </p>
         </div>
       </header>
@@ -196,10 +269,10 @@ export default function Home() {
               className="text-3xl md:text-4xl font-medium text-[#3D3D3D] mb-3"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              Find Your Seat
+              {t.findYourSeat}
             </h2>
             <p className="text-[#6B6B6B] font-light">
-              Enter your name to discover your table assignment
+              {t.searchDescription}
             </p>
           </div>
 
@@ -229,7 +302,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-[#9CAF88] font-medium uppercase tracking-wide">Found!</p>
+                    <p className="text-sm text-[#9CAF88] font-medium uppercase tracking-wide">{t.found}</p>
                     <h3 className="text-xl font-semibold text-[#3D3D3D]" style={{ fontFamily: 'var(--font-display)' }}>
                       {selectedResult.guest.name}
                     </h3>
@@ -238,7 +311,7 @@ export default function Home() {
                 {selectedResult.table && (
                   <div className="bg-[#FFFEF7] rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-[#6B6B6B]">You are seated at</p>
+                      <p className="text-sm text-[#6B6B6B]">{t.seatedAt}</p>
                       <p className="text-2xl font-semibold text-[#C9A227]" style={{ fontFamily: 'var(--font-display)' }}>
                         {selectedResult.table.name}
                       </p>
@@ -265,10 +338,10 @@ export default function Home() {
               className="text-2xl font-medium text-[#3D3D3D] mb-2"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              Venue Layout
+              {t.venueLayout}
             </h2>
             <p className="text-sm text-[#6B6B6B] font-light">
-              Tap any table to view the guest list
+              {t.tapTable}
             </p>
           </div>
 
@@ -294,7 +367,7 @@ export default function Home() {
                 className="text-lg font-medium text-[#3D3D3D] px-4"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Map Legend
+                {t.mapLegend}
               </h3>
               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#E8D5A3] to-transparent" />
             </div>
@@ -302,19 +375,19 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-8">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#F7E7CE] border-2 border-[#E8D5A3] shadow-md" />
-                <span className="text-sm text-[#6B6B6B]">Guest Tables</span>
+                <span className="text-sm text-[#6B6B6B]">{t.guestTables}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#C9A227] border-2 border-[#B8922A] shadow-md ring-2 ring-[#C9A227]/30" />
-                <span className="text-sm text-[#6B6B6B]">Your Table</span>
+                <span className="text-sm text-[#6B6B6B]">{t.yourTable}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 rounded-full bg-[#C9A227] border border-[#B8922A]" />
-                <span className="text-sm text-[#6B6B6B]">Occupied Seat</span>
+                <span className="text-sm text-[#6B6B6B]">{t.occupiedSeat}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 rounded-full bg-[#F5E1DA] border border-[#E8D5A3]" />
-                <span className="text-sm text-[#6B6B6B]">Available Seat</span>
+                <span className="text-sm text-[#6B6B6B]">{t.availableSeat}</span>
               </div>
             </div>
           </div>
@@ -327,7 +400,7 @@ export default function Home() {
           <OrnamentalDivider />
 
           <div className="mb-6">
-            <p className="text-sm text-[#6B6B6B] uppercase tracking-widest mb-2">Entrance</p>
+            <p className="text-sm text-[#6B6B6B] uppercase tracking-widest mb-2">{t.entrance}</p>
             <p
               className="text-xl text-[#3D3D3D] font-medium"
               style={{ fontFamily: 'var(--font-display)' }}
@@ -349,7 +422,7 @@ export default function Home() {
           </div>
 
           <p className="mt-6 text-xs text-[#6B6B6B]/60">
-            Wishing you a wonderful celebration
+            {t.wishingYou}
           </p>
         </div>
 
@@ -368,10 +441,10 @@ export default function Home() {
           {/* Header info */}
           <div className="flex items-center justify-between text-sm pb-4 border-b border-[#E8D5A3]">
             <span className="text-[#6B6B6B]">
-              <span className="text-[#C9A227] font-semibold">{selectedTable?.seats}</span> seats
+              <span className="text-[#C9A227] font-semibold">{selectedTable?.seats}</span> {t.seats}
             </span>
             <span className="text-[#6B6B6B]">
-              <span className="text-[#9CAF88] font-semibold">{tableGuests.length}</span> guest{tableGuests.length !== 1 ? 's' : ''} assigned
+              <span className="text-[#9CAF88] font-semibold">{tableGuests.length}</span> {tableGuests.length !== 1 ? t.guests : t.guest} {t.assigned}
             </span>
           </div>
 
@@ -397,11 +470,9 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                  {guest.seatNumber && (
-                    <span className="text-sm text-[#C9A227] bg-[#F7E7CE] px-3 py-1 rounded-full font-medium">
-                      Seat {guest.seatNumber}
-                    </span>
-                  )}
+                  <span className="text-sm text-[#C9A227] bg-[#F7E7CE] px-3 py-1 rounded-full font-medium">
+                    {guest.pax} {t.pax}
+                  </span>
                 </div>
               ))}
             </div>
@@ -412,7 +483,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <p className="text-[#6B6B6B] font-light">No guests assigned yet</p>
+              <p className="text-[#6B6B6B] font-light">{t.noGuests}</p>
             </div>
           )}
         </div>
