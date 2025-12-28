@@ -42,6 +42,7 @@ export default function GuestsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [highlightedTableId, setHighlightedTableId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
@@ -217,6 +218,51 @@ export default function GuestsPage() {
       }
     } catch (error) {
       console.error("Failed to delete guest:", error);
+    }
+  };
+
+  const handleCheckIn = async (guest: Guest) => {
+    try {
+      const response = await fetch(`/api/guests/${guest.id}/checkin`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        const updatedGuest = await response.json();
+        setGuests((prev) =>
+          prev.map((g) => (g.id === guest.id ? updatedGuest : g))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to check in guest:", error);
+    }
+  };
+
+  const handleUndoCheckIn = async (guest: Guest) => {
+    try {
+      const response = await fetch(`/api/guests/${guest.id}/checkin`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const updatedGuest = await response.json();
+        setGuests((prev) =>
+          prev.map((g) => (g.id === guest.id ? updatedGuest : g))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to undo check-in:", error);
+    }
+  };
+
+  const formatCheckInTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleGuestRowClick = (guest: Guest) => {
+    if (guest.tableId) {
+      setHighlightedTableId(guest.tableId);
     }
   };
 
@@ -483,14 +529,14 @@ export default function GuestsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
           <div className="wedding-card rounded-xl p-3 sm:p-4 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#C9A227]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
             <p
               className="text-2xl sm:text-3xl font-semibold text-[#C9A227]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {guests.length}
+              {pagination.total}
             </p>
             <p className="text-xs sm:text-sm text-[#6B6B6B]">Total</p>
           </div>
@@ -505,14 +551,24 @@ export default function GuestsPage() {
             <p className="text-xs sm:text-sm text-[#6B6B6B]">Assigned</p>
           </div>
           <div className="wedding-card rounded-xl p-3 sm:p-4 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-emerald-500/20 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <p
+              className="text-2xl sm:text-3xl font-semibold text-emerald-600"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {guests.filter((g) => g.checkedInAt).length}
+            </p>
+            <p className="text-xs sm:text-sm text-[#6B6B6B]">Hadir</p>
+          </div>
+          <div className="wedding-card rounded-xl p-3 sm:p-4 text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16 bg-[#F5E1DA]/50 rounded-full -translate-y-1/2 translate-x-1/2" />
             <p
               className="text-2xl sm:text-3xl font-semibold text-[#D4A574]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {guests.filter((g) => !g.tableId).length}
+              {guests.filter((g) => !g.checkedInAt).length}
             </p>
-            <p className="text-xs sm:text-sm text-[#6B6B6B]">Unassigned</p>
+            <p className="text-xs sm:text-sm text-[#6B6B6B]">Belum</p>
           </div>
         </div>
 
@@ -545,6 +601,7 @@ export default function GuestsPage() {
               venue={venue}
               tables={tables}
               fixtures={fixtures}
+              highlightedTableId={highlightedTableId}
               showOccupiedSeats={true}
               showFullTableHighlight={true}
               className="rounded-xl overflow-hidden"
@@ -561,7 +618,7 @@ export default function GuestsPage() {
                   <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Name</th>
                   <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Pax</th>
                   <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Table</th>
-                  <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Phone</th>
+                  <th className="text-left py-4 px-6 font-medium text-[#3D3D3D]">Status</th>
                   <th className="text-right py-4 px-6 font-medium text-[#3D3D3D]">Actions</th>
                 </tr>
               </thead>
@@ -577,7 +634,11 @@ export default function GuestsPage() {
                   </tr>
                 ) : (
                   guests.map((guest) => (
-                    <tr key={guest.id} className="border-b border-[#E8D5A3]/50 hover:bg-[#F7E7CE]/20 transition-colors">
+                    <tr
+                      key={guest.id}
+                      className={`border-b border-[#E8D5A3]/50 hover:bg-[#F7E7CE]/20 transition-colors cursor-pointer ${guest.checkedInAt ? 'bg-emerald-50/30' : ''} ${highlightedTableId === guest.tableId ? 'bg-[#C9A227]/10' : ''}`}
+                      onClick={() => handleGuestRowClick(guest)}
+                    >
                       <td className="py-4 px-6">
                         <span className="font-medium text-[#3D3D3D]">{guest.name}</span>
                       </td>
@@ -597,8 +658,29 @@ export default function GuestsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-4 px-6 text-[#6B6B6B]">
-                        {guest.phone || "-"}
+                      <td className="py-4 px-6">
+                        {guest.checkedInAt ? (
+                          <button
+                            onClick={() => handleUndoCheckIn(guest)}
+                            className="inline-flex items-center gap-1.5 text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full text-sm font-medium hover:bg-emerald-200 transition-colors"
+                            title="Click to undo"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Hadir {formatCheckInTime(guest.checkedInAt)}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleCheckIn(guest)}
+                            className="inline-flex items-center gap-1.5 text-[#6B6B6B] bg-gray-100 px-3 py-1 rounded-full text-sm font-medium hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Mark Hadir
+                          </button>
+                        )}
                       </td>
                       <td className="py-4 px-6 text-right">
                         <button
@@ -633,7 +715,11 @@ export default function GuestsPage() {
             </div>
           ) : (
             guests.map((guest) => (
-              <div key={guest.id} className="wedding-card rounded-xl p-4">
+              <div
+                key={guest.id}
+                className={`wedding-card rounded-xl p-4 cursor-pointer ${guest.checkedInAt ? 'ring-2 ring-emerald-200 bg-emerald-50/30' : ''} ${highlightedTableId === guest.tableId ? 'ring-2 ring-[#C9A227]' : ''}`}
+                onClick={() => handleGuestRowClick(guest)}
+              >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
                     <span className="font-medium text-[#3D3D3D] block truncate">{guest.name}</span>
@@ -654,7 +740,7 @@ export default function GuestsPage() {
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mb-3">
                   {guest.table ? (
                     <span className="text-[#9CAF88] bg-[#9CAF88]/10 px-2 py-0.5 rounded-full text-xs font-medium">
                       {guest.table.name}
@@ -668,6 +754,28 @@ export default function GuestsPage() {
                     <span className="text-[#6B6B6B] text-xs">{guest.phone}</span>
                   )}
                 </div>
+                {/* Check-in button for mobile */}
+                {guest.checkedInAt ? (
+                  <button
+                    onClick={() => handleUndoCheckIn(guest)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-emerald-600 bg-emerald-100 px-3 py-2 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Hadir {formatCheckInTime(guest.checkedInAt)}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleCheckIn(guest)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-[#6B6B6B] bg-gray-100 px-3 py-2 rounded-lg text-sm font-medium hover:bg-emerald-100 hover:text-emerald-600 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Mark Hadir
+                  </button>
+                )}
               </div>
             ))
           )}

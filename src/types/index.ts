@@ -50,6 +50,7 @@ export interface Guest {
   pax: number;
   seatNumber: number | null;
   tableId: string | null;
+  checkedInAt: string | null;
   table?: Table | null;
 }
 

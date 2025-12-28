@@ -164,7 +164,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-10">
           {/* Total Tables */}
           <div className="wedding-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-shadow">
             <div className="absolute top-0 right-0 w-24 h-24 bg-[#9CAF88]/10 rounded-full -translate-y-8 translate-x-8 group-hover:scale-110 transition-transform" />
@@ -207,44 +207,26 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Assigned */}
+          {/* Total Pax */}
           <div className="wedding-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-shadow">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -translate-y-8 translate-x-8 group-hover:scale-110 transition-transform" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#E8D5A3]/20 rounded-full -translate-y-8 translate-x-8 group-hover:scale-110 transition-transform" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="w-10 h-10 rounded-xl bg-[#E8D5A3]/30 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-[#B8922A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0-13A4 4 0 1012 9.646" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-[#6B6B6B]">Assigned</span>
+                <span className="text-sm font-medium text-[#6B6B6B]">Total Pax</span>
               </div>
               <p
-                className="text-4xl font-semibold text-emerald-600"
+                className="text-4xl font-semibold text-[#B8922A]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                {stats?.assignedGuests || 0}
+                {stats?.totalPax || 0}
               </p>
-            </div>
-          </div>
-
-          {/* Unassigned */}
-          <div className="wedding-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-shadow">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full -translate-y-8 translate-x-8 group-hover:scale-110 transition-transform" />
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-medium text-[#6B6B6B]">Unassigned</span>
-              </div>
-              <p
-                className="text-4xl font-semibold text-amber-600"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                {stats?.unassignedGuests || 0}
+              <p className="text-xs text-[#6B6B6B] mt-1">
+                {stats?.totalSeats || 0} seats available
               </p>
             </div>
           </div>
@@ -321,34 +303,6 @@ export default function AdminDashboard() {
             </div>
           </Link>
         </div>
-
-        {/* Progress Indicator */}
-        {stats && stats.totalGuests > 0 && (
-          <div className="mt-10">
-            <div className="wedding-card rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3
-                  className="text-lg font-semibold text-[#3D3D3D]"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  Seating Progress
-                </h3>
-                <span className="text-sm text-[#6B6B6B]">
-                  {Math.round((stats.assignedGuests / stats.totalGuests) * 100)}% complete
-                </span>
-              </div>
-              <div className="h-3 bg-[#F7E7CE] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#9CAF88] to-[#C9A227] rounded-full transition-all duration-500"
-                  style={{ width: `${(stats.assignedGuests / stats.totalGuests) * 100}%` }}
-                />
-              </div>
-              <p className="mt-3 text-sm text-[#6B6B6B] text-center">
-                {stats.assignedGuests} of {stats.totalGuests} guests have been assigned to tables
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Table Occupancy Overview */}
         {tables.length > 0 && (
